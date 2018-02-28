@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="UIBG">
+    <file>UI_button.png</file>
+    <file>UI_base.png</file>
+  </qresource>
+</RCC>
