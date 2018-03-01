@@ -25,7 +25,6 @@ sys.path.append('//p.sv/Prism/project/SER/user/chew/SERTools')#adding new direct
 import PySide2 #importing modules for the UI
 import PySide2.QtWidgets as QtWidgets
 import PySide2.QtGui as QtGui
-#import PySide2.QtCore
 from PySide2.QtCore import *  #either this or the other
 
 from PySide2 import QtUiTools
@@ -38,8 +37,7 @@ mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = shiboken2.wrapInstance(long(mayaMainWindowPtr), QtWidgets.QWidget) 
 
 def main(fujiArgu = 0):
-    #mayaMainWindowPtr = omui.MQtUtil.mainWindow()
-    #mayaMainWindow = shiboken2.wrapInstance(long(mayaMainWindowPtr), QtWidgets.QWidget) 
+
     expDialog = MainWindow(fujiArgu)
     expDialog.show()
     
@@ -71,14 +69,21 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.weaponNumber = self.fileNameSplit[0]
             #print('commonMotion') #for debugging purposes
         elif len(self.fileNameSplit[0]) == 3 and self.fileNameSplit[0] != 'SER':
-            self.fileType = 'charaMotion'
-            self.charaNumber = self.fileNameSplit[0]
-            #print('charaMotion') #for debugging purposes
-            if self.fileNameSplit[1][:8] == 'Resonize':
-                self.fileType = 'kyojinMotion'
-                self.weaponNumber = 're'
+            if len(self.fileNameSplit[1]) == 4:
+                self.fileType = 'cutScene'
+                self.charaNumber = self.fileNameSplit[0]
+                self.weaponNumber = 'cs'
             else:
-                self.weaponNumber = self.fileNameSplit[1]
+                self.fileType = 'charaMotion'
+                self.charaNumber = self.fileNameSplit[0]
+                #print('charaMotion') #for debugging purposes
+                if self.fileNameSplit[1][:8] == 'Resonize':
+                    self.fileType = 'kyojinMotion'
+                    self.weaponNumber = 're'
+                else:
+                    self.weaponNumber = self.fileNameSplit[1]
+
+
             
         self.currentAddress = cmds.file(q = True, location = True).rstrip(self.fileName)
         
@@ -119,9 +124,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         self.maFiles = 'D:/SER/SVN/MAYA/motion/maya'
         
         
-        
-        
-        
         #defining chara name and weapon name with chara number and weapon number
         if self.fileType == 'charaMotion':
             self.charaNameText = self.charaNameIndex[self.charaNumber]  #charaMotion
@@ -137,8 +139,12 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             else:
                 self.kyojinka = '_000_'
         elif self.fileType == 'commonMotion':
-            self.charaNameText = '武器共通モーション'                   #commonMotion
+            self.charaNameText = u'武器共通モーション'                   #commonMotion
             self.weaponNameText = self.weaponIndex[self.weaponNumber]   #commonMotion
+        elif self.fileType == 'cutScene':
+            self.charaNameText = self.charaNameIndex[self.charaNumber]                   #cutScene
+            self.weaponNameText = u'必殺技'#cutScene
+            
         '''
         #defining weapon name
         if self.fileType == 'charaMotion':
@@ -164,12 +170,14 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 self.exportPathText = 'D:/SER/SER_SVN' + self.weaponPathIndex[self.weaponNumber][10:]
         elif self.fileType == 'charaModel':
             self.exportPathText = 'D:/SER/SVN/MAYA/model/' + 'SER_0' + self.charaNumber[1:] + '_' + self.fileNameSplit[2] + '/FBX'
+        elif self.fileType == 'cutScene':
+            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0]
         
         '''
         INPUTS
         '''
         #motion
-        if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion':
+        if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene':
             self.charaName = self.charaNameInput
             self.charaName.setPlainText(self.charaNameText)
             self.weaponName = self.weapNameInput

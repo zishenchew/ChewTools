@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>750</width>
     <height>360</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>801</width>
+     <width>751</width>
      <height>351</height>
     </rect>
    </property>
@@ -29,30 +29,6 @@
     <attribute name="title">
      <string>モーション出力</string>
     </attribute>
-    <widget class="QPlainTextEdit" name="motionInput">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>110</y>
-       <width>641</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="plainText">
-      <string/>
-     </property>
-    </widget>
     <widget class="QLabel" name="motionNameDisplay">
      <property name="geometry">
       <rect>
@@ -85,42 +61,12 @@
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QPlainTextEdit" name="exportPathInput">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>80</y>
-       <width>641</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="plainText">
-      <string/>
-     </property>
-    </widget>
     <widget class="QPushButton" name="animExportButton">
      <property name="geometry">
       <rect>
        <x>90</x>
        <y>270</y>
-       <width>641</width>
+       <width>611</width>
        <height>20</height>
       </rect>
      </property>
@@ -142,30 +88,6 @@
      </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QPlainTextEdit" name="charaNameInput">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>20</y>
-       <width>241</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="plainText">
-      <string/>
      </property>
     </widget>
     <widget class="QRadioButton" name="ingameButton1">
@@ -213,7 +135,37 @@
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QPlainTextEdit" name="weapNameInput">
+    <widget class="QLineEdit" name="exportPathInput">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>80</y>
+       <width>611</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="motionInput">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>110</y>
+       <width>611</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="charaNameInput">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>20</y>
+       <width>241</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="weapNameInput">
      <property name="geometry">
       <rect>
        <x>90</x>
@@ -221,20 +173,6 @@
        <width>241</width>
        <height>21</height>
       </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="plainText">
-      <string/>
      </property>
     </widget>
    </widget>

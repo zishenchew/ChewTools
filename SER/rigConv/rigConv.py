@@ -27,7 +27,7 @@ def createContr():
         
     #setting T-pose in frame -10
     pm.currentTime(-10, edit = True, update = True)
-    rigConv.AnimPose_001.poseTest()
+    AnimPose_001.poseTest()
     #creating hand controls
     ikRH = mel.eval('curve -d 1 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 -0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 -0.5 0.5 -p 0.5 -0.5 -0.5 -p -0.5 -0.5 -0.5 -p -0.5 -0.5 0.5 -p 0.5 -0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 0.5 0.5 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -n "ik_Hand_R" ;')
     ikLH = mel.eval('curve -d 1 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 -0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 -0.5 0.5 -p 0.5 -0.5 -0.5 -p -0.5 -0.5 -0.5 -p -0.5 -0.5 0.5 -p 0.5 -0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 0.5 0.5 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -n "ik_Hand_L" ;')
@@ -46,14 +46,54 @@ def createContr():
     
     #creating COG control
     COG = mel.eval('curve -d 1 -p 1 0 -1 -p -1 0 -1 -p -1 0 1 -p 1 0 1 -p 1 0 -1 -k 0 -k 1 -k 2 -k 3 -k 4 -n "COG" ;')
-    pm.xform(COG, translation = pm.xform('Character1_Ctrl_HipsEffector', q = True, ws = True, translation = True), rotation = pm.xform('Character1_Ctrl_RightAnkleEffector', q = True, ws = True, rotation = True), scale = [15, 15, 15], ws = True)
+    pm.xform(COG, translation = pm.xform('Character1_Ctrl_HipsEffector', q = True, ws = True, translation = True), rotation = pm.xform('Character1_Ctrl_RightAnkleEffector', q = True, ws = True, rotation = True), scale = [20, 20, 20], ws = True)
     pm.parentConstraint('Character1_Ctrl_HipsEffector', COG) #constraint to bake the transform data
     
+    ##############################################################################################################################################################################
+    contrList = [ikRH, ikLH, ikRFoot, ikLFoot, COG]
+    contrDict = {
+        ikRH : 'Character1_Ctrl_RightWristEffector',
+        ikLH : 'Character1_Ctrl_LeftWristEffector',
+        ikRFoot : 'Character1_Ctrl_RightAnkleEffector',
+        ikLFoot : 'Character1_Ctrl_LeftAnkleEffector',
+        COG : 'Character1_Ctrl_HipsEffector'
+    }
+    
+    #freeze transformation here
+    pm.makeIdentity(contrList, apply = True)
+    for i in pm.listRelatives('Character_Reference', ad = True, type = 'joint'):
+        if i[:3] == 'Cha':
+            try:
+                if pm.keyframe('Character1_Ctrl_' + i[10:], at = 'tx', q = True):
+                    for j in pm.keyframe('Character1_Ctrl_' + i[10:], at = 'tx', q = True):
+                        pm.currentTime(j, edit = True, update = True)
+                        pm.setKeyframe(i)
+                elif pm.keyframe('Character1_Ctrl_' + i[10:], at = 'rx', q = True):
+                    for j in pm.keyframe('Character1_Ctrl_' + i[10:], at = 'rx', q = True):
+                        pm.currentTime(j, edit = True, update = True)
+                        pm.setKeyframe(i)
+            except:
+                pass
+    
     #check if there is animation data
+
+    pm.currentTime(0, edit = True, update = True)    
+    for i in contrList:
+        print i
+        pm.setKeyframe(i)
+        pm.setAttr('%s.blendParent1' %i, 1)
+    for i in contrDict:
+        for j in pm.keyframe(contrDict[i], q = True, at = 'tx'):
+            pm.currentTime(j, edit = True, update = True)
+            pm.setKeyframe(i)
+            
+            
+
+    '''#this part is redundant now
     if pm.keyframe('Character1_Ctrl_RightWristEffector', 'Character1_Ctrl_LeftWristEffector', 'Character1_Ctrl_RightAnkleEffector', 'Character1_Ctrl_LeftAnkleEffector', 'Character1_Ctrl_HipsEffector', q = True):
         print('keyframe exists, baking')
-        pm.bakeResults(ikRH, ikLH, ikRFoot, ikLFoot, COG, smart = True, simulation = False)#baking the controllers to transfer the animation data
-    
+        pm.bakeResults(ikRH, ikLH, ikRFoot, ikLFoot, COG, smart = True, simulation = False, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))#baking the controllers to transfer the animation data
+    '''
     pm.mel.mayaHIKsetCharacterInput( "Character1","" ) #turn off humanIK
     pm.mel.hikUpdateContextualUI()
     pm.mel.hikUpdateSourceList()
@@ -61,70 +101,44 @@ def createContr():
     pm.mel.hikUpdateContextualUI()
     pm.mel.hikUpdateSourceList()
     
+
     #reverse the constraints on controllers
-    contrList = [
+    contrList = [ikRH, ikLH, ikRFoot, ikLFoot, COG]
+    for i in contrList:
+        pm.delete(pm.listRelatives(i, type = 'constraint'))
+    
+    #set up IKs
+    ikHandleRH = pm.ikHandle(name = 'ikHandleRightHand', sj = 'Character_RightArm', ee = 'Character_RightHand', solver = 'ikRPsolver')
+    ikHandleLH = pm.ikHandle(name = 'ikHandleLeftHand', sj = 'Character_LeftArm', ee = 'Character_LeftHand', solver = 'ikRPsolver')
+    ikHandleRF = pm.ikHandle(name = 'ikHandleRightFoot', sj = 'Character_RightUpLeg', ee = 'Character_RightFoot', solver = 'ikRPsolver')
+    ikHandleLF = pm.ikHandle(name = 'ikHandleLeftFoot', sj = 'Character_LeftUpLeg', ee = 'Character_LeftFoot', solver = 'ikRPsolver')
+    #create poleVectors 
+    #pm.spaceLocator
+    
+    pm.parentConstraint(ikRH, 'Character_RightHand')#
+    pm.parentConstraint(ikLH, 'Character_LeftHand')#
+    pm.parentConstraint(ikRFoot, 'Character_RightFoot')#
+    pm.parentConstraint(ikLFoot, 'Character_LeftFoot')#
+    pm.parentConstraint(COG, 'Character_Hips')
     
     
-#create two functions, 1 to create the locator and constraint it
-def createConstr():
-    if pm.objExists('HelperLocator'):#check if script is already run
-        return pm.confirmDialog(title = 'SER Constraint', message = u'コンすトレイン既にやりました')
 
-    loc = pm.spaceLocator(name = 'HelperLocator')
-    pm.xform(loc, ws = True, translation = pm.xform('Helper_Weapon1', q = True, translation = True, ws = True), rotation = pm.xform('Helper_Weapon1', q = True, rotation = True, ws = True), scale = [5,5,5]) #moving locator to right place
-    
-    if pm.listRelatives('Joint_Weapon', type = 'constraint'):
-        pm.delete(pm.listRelatives('Joint_Weapon', type = 'constraint')[0]) #delete any existing constraint
 
-    jointToLoc = pm.parentConstraint(loc, 'Joint_Weapon', name = 'constraint_Joint_To_Locator')
-    #parent constraint the locator to both helpers
-    parentCon = pm.parentConstraint('Helper_Weapon1', loc, mo = True)
-    pm.parentConstraint('Helper_Weapon2', loc, mo = True)
-    
-    pm.setAttr(pm.listRelatives('HelperLocator', type = 'constraint')[0] + '.' + pm.listAttr(pm.listRelatives('HelperLocator', type = 'constraint')[0])[-2], 1) #please check and adjust final variable names
-    pm.setAttr(pm.listRelatives('HelperLocator', type = 'constraint')[0] + '.' + pm.listAttr(pm.listRelatives('HelperLocator', type = 'constraint')[0])[-1], 0)
-    #pm.setAttr(pm.listRelatives('HelperLocator', type = 'constraint')[0].Helper_Weapon2W1, 0) #please check and adjust final variable names
-    
-#create another function to bake it, remove the constraints, switch off humanIK, constraint helper to the locator, bake it, and then delete constraints and switch on humanIK again
-def bakeLoc():
-    if pm.objExists('HelperLocator'):
-        loc = pm.ls('HelperLocator')[0]
-    #handling the locator
-    pm.bakeResults(loc, simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()) ) #baking the locator
-    pm.delete(pm.listRelatives(loc, type = 'constraint')[0])#removing the constraint of the locator
-    
-    pm.mel.eval('HIKCharacterControlsTool') #command to open humanIK
-    pm.mel.hikSetCurrentCharacter("Character1") #selecting character
-    pm.mel.hikUpdateContextualUI()
-    pm.mel.hikBakeCharacter(0) #this is the bake to skeleton command
-    
-    pm.parentConstraint(loc, 'Helper_Weapon1')
-    pm.bakeResults('Helper_Weapon1', simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()) ) #baking the locator
-    pm.delete(pm.listRelatives('Helper_Weapon1', type = 'constraint')[0])
-    
-    pm.mel.mayaHIKsetRigInput("Character1")#setting back to humanIK
-    pm.mel.hikUpdateContextualUI()#updating the humanIK UI
-    pm.mel.hikUpdateSourceList()
-    
-    #changing constraints and deleting old stuff
-    pm.delete('constraint_Joint_To_Locator')
-    pm.parentConstraint('Helper_Weapon1', 'Joint_Weapon')
-
-def scriptUI():
-    windowID = 'WeapCon'
+def rigMakeUI():
+    windowID = 'rigUI'
     if pm.window(windowID, exists = True):
         pm.deleteUI(windowID)
         pm.windowPref( 'WeapCon', remove=True )
     
     #creating window
-    pm.window(windowID, title = 'SER Weapon Constraint | 2018/02/28', widthHeight = (600,100))
+    pm.window(windowID, title = 'SER Rig | 2018/03/01', widthHeight = (600,100))
     
     #buttons for first row
-    constrFrame = pm.frameLayout(annotation = 'annotation test', label = '武器コンストレイン', labelIndent = 5, width = 590, marginHeight = 5)
+    rigFrame = pm.frameLayout(label = u'リグツール', labelIndent = 5, width = 590, marginHeight = 5)
     pm.rowLayout( 'row1', nc = 5, width = 400)
     
-    conSetup = pm.button( 'constraintSetup', label = u'コンストレイン　インストール', width = 300, height = 30, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'createConstr()' )
-    bake = pm.button( 'motionBake', label = u'ベーク', width = 300, height = 30, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'bakeLoc()' )
+    conSetup = pm.button( 'constraintSetup', label = u'リグを作る', width = 300, height = 30, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'createContr()' )
+    #bake = pm.button( 'motionBake', label = u'ベーク', width = 300, height = 30, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'bakeLoc()' )
     '''
     #buttons for 2nd row
     pm.rowLayout( 'row2', nc = 2, parent = 'columnLayout01' )
@@ -144,4 +158,5 @@ def scriptUI():
     
     pm.showWindow()
     pm.window(windowID, edit = True, widthHeight = (600,100))
-
+    
+rigMakeUI()

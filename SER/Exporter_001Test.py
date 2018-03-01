@@ -29,9 +29,9 @@ from PySide2.QtCore import *  #either this or the other
 
 from PySide2 import QtUiTools
 import shiboken2
-import ExporterUI_001 #this is the UI file
-reload(ExporterUI_001)
-from ExporterUI_001 import Ui_MainWindow
+import ExporterUI_002 #this is the UI file
+reload(ExporterUI_002)
+from ExporterUI_002 import Ui_MainWindow
 
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = shiboken2.wrapInstance(long(mayaMainWindowPtr), QtWidgets.QWidget) 
@@ -179,19 +179,19 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #motion
         if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene':
             self.charaName = self.charaNameInput
-            self.charaName.setPlainText(self.charaNameText)
+            self.charaName.setText(self.charaNameText)
             self.weaponName = self.weapNameInput
-            self.weaponName.setPlainText(self.weaponNameText)
+            self.weaponName.setText(self.weaponNameText)
             self.exportPath = self.exportPathInput
-            self.exportPath.setPlainText(self.exportPathText)
+            self.exportPath.setText(self.exportPathText)
             self.exportName = self.motionInput
-            self.exportName.setPlainText(self.fileName)
+            self.exportName.setText(self.fileName)
             #print 'animTab' #for debugging purposes
         
         #model
         if self.fileType == 'charaModel':
-            self.charaNameInput_2.setPlainText(self.charaNameText) #same as motion
-            self.exportPathInput_2.setPlainText(self.exportPathText) #
+            self.charaNameInput_2.setText(self.charaNameText) #same as motion
+            self.exportPathInput_2.setText(self.exportPathText) #
             #print 'modelTab' #for debugging purposes
             
         
@@ -261,9 +261,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         self.deleteNonHIK()
         
         #this section of code for doing checks if folder exists, and if it doesn't, creating it
-        if not os.path.exists(self.exportPath.toPlainText()):
+        if not os.path.exists(self.exportPath.text()):
             print (u'パスは存在していないので、作ります')
-            os.makedirs(self.exportPath.toPlainText())
+            os.makedirs(self.exportPath.text())
 
         
     def animExport_2(self):
@@ -285,7 +285,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         except:
             pass
         mel.eval('gameExp_AddNewAnimationClip 1;') # adds a new clip
-        mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + self.exportPath.toPlainText() + '";') #setting address
+        mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + self.exportPath.text() + '";') #setting address
         
         formLayout1 = pm.layout('anim_gameExporterExportTypeFormLayout', query = True, childArray = True)[0] #formLayout1, formLayout2, fieldText1 and self.clipNameFieldpy are all 
         formLayout2 = pm.layout('anim_gameFbxExporterScrollLayout', query = True, childArray = True)[0]
@@ -293,10 +293,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         self.clipNameFieldpy = 'gameExporterWindow|gameExporterTabFormLayout|gameExporterTabLayout|gameExporterAnimationTab|anim_gameExporterMainFormLayout|anim_gameExporterExportTypeFormLayout|' + formLayout1 + '|anim_gameFbxExporterAnimClipFrameLayout|anim_gameFbxExporterAnimClipFormLayout|anim_gameFbxExporterScrollLayout|' + formLayout2 + '|' + fieldText1 
         
         if self.ingameExport.isChecked() == True:#motion export
-            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.toPlainText() + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
+            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
             pm.select('Character_Holder')
         elif self.cutsceneExport.isChecked() == True: #camera export
-            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.toPlainText() + '_cam' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
+            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_cam' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
         
         mel.eval('gameExp_DoExport();')
         
@@ -361,9 +361,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     
     def modelExport(self):
         #create folder if it doesn't exist
-        if not os.path.exists(self.exportPathInput_2.toPlainText()):
+        if not os.path.exists(self.exportPathInput_2.text()):
             print (u'パスは存在していないので、作ります')
-            os.makedirs(self.exportPathInput_2.toPlainText())
+            os.makedirs(self.exportPathInput_2.text())
         self.modelExport_1()
         self.modelExport_2()
         pm.confirmDialog(title = 'SER 出力ツール', message = u'モデルは出力しました')
@@ -388,7 +388,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #print('modelExport_1')
         
     def modelExport_2(self):
-        cmds.file(self.exportPathInput_2.toPlainText() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
+        cmds.file(self.exportPathInput_2.text() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
         #re-open the save file
         cmds.file(self.saveFileName, open = True, force = True)
         #print('modelExport_2')
