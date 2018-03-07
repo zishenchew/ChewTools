@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'E:/ChewTools/SER/ChewToolsExporter/ExporterUI_002.ui'
 #
-# Created: Thu Mar  1 17:41:54 2018
+# Created: Fri Mar  2 10:47:39 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -59,48 +59,31 @@ class Ui_MainWindow(object):
         self.ExporterTab.addTab(self.MotionTab, "")
         self.ModelTab = QtWidgets.QWidget()
         self.ModelTab.setObjectName("ModelTab")
-        self.charaNameInput_2 = QtWidgets.QPlainTextEdit(self.ModelTab)
-        self.charaNameInput_2.setGeometry(QtCore.QRect(90, 20, 241, 21))
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.charaNameInput_2.setFont(font)
-        self.charaNameInput_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.charaNameInput_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.charaNameInput_2.setPlainText("")
-        self.charaNameInput_2.setObjectName("charaNameInput_2")
         self.charaNameDisplay_2 = QtWidgets.QLabel(self.ModelTab)
         self.charaNameDisplay_2.setGeometry(QtCore.QRect(40, 20, 41, 20))
         self.charaNameDisplay_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.charaNameDisplay_2.setObjectName("charaNameDisplay_2")
-        self.exportPathInput_2 = QtWidgets.QPlainTextEdit(self.ModelTab)
-        self.exportPathInput_2.setGeometry(QtCore.QRect(90, 50, 571, 21))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.exportPathInput_2.sizePolicy().hasHeightForWidth())
-        self.exportPathInput_2.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.exportPathInput_2.setFont(font)
-        self.exportPathInput_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.exportPathInput_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.exportPathInput_2.setPlainText("")
-        self.exportPathInput_2.setObjectName("exportPathInput_2")
         self.exportBox_2 = QtWidgets.QLabel(self.ModelTab)
         self.exportBox_2.setGeometry(QtCore.QRect(30, 50, 51, 20))
         self.exportBox_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.exportBox_2.setObjectName("exportBox_2")
         self.modelExportButton = QtWidgets.QPushButton(self.ModelTab)
-        self.modelExportButton.setGeometry(QtCore.QRect(90, 270, 571, 20))
+        self.modelExportButton.setGeometry(QtCore.QRect(90, 270, 611, 20))
         self.modelExportButton.setObjectName("modelExportButton")
+        self.charaNameInput_2 = QtWidgets.QLineEdit(self.ModelTab)
+        self.charaNameInput_2.setGeometry(QtCore.QRect(90, 20, 241, 21))
+        self.charaNameInput_2.setObjectName("charaNameInput_2")
+        self.exportPathInput_2 = QtWidgets.QLineEdit(self.ModelTab)
+        self.exportPathInput_2.setGeometry(QtCore.QRect(90, 50, 611, 21))
+        self.exportPathInput_2.setObjectName("exportPathInput_2")
         self.ExporterTab.addTab(self.ModelTab, "")
 
         self.retranslateUi(MainWindow)
-        self.ExporterTab.setCurrentIndex(0)
+        self.ExporterTab.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SER 出力ツール", None, -1))
+        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SER 出力ツール | 2018/03/02", None, -1))
         self.motionNameDisplay.setText(QtWidgets.QApplication.translate("MainWindow", "モーション名：", None, -1))
         self.exportBox.setText(QtWidgets.QApplication.translate("MainWindow", "出力パス", None, -1))
         self.animExportButton.setText(QtWidgets.QApplication.translate("MainWindow", "出力", None, -1))

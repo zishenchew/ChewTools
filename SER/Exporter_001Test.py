@@ -187,13 +187,14 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.exportName = self.motionInput
             self.exportName.setText(self.fileName)
             #print 'animTab' #for debugging purposes
+            self.ExporterTab.setCurrentIndex(0)#setting animation(0) tab to be switched whenever the tool is loaded
         
         #model
-        if self.fileType == 'charaModel':
+        elif self.fileType == 'charaModel':
             self.charaNameInput_2.setText(self.charaNameText) #same as motion
             self.exportPathInput_2.setText(self.exportPathText) #
             #print 'modelTab' #for debugging purposes
-            
+            self.ExporterTab.setCurrentIndex(1)#setting model(1) tab to be switched whenever the tool is loaded
         
 
         

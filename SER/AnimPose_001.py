@@ -83,7 +83,7 @@ def poseTest():
     def resetChar(_):
         #reading data from pose
         tPose = []
-        dummyData = r'\\p.sv\Prism\project\SER\user\chew\ref\anim\Pose\default.pose'
+        dummyData = r'\\p.sv\Prism\project\SER\user\chew\ref\animPose\default.pose'
         readFile = open(dummyData, 'r')
         for i in readFile:
             tPose.append(i.rstrip('\n'))

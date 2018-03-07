@@ -27,11 +27,13 @@ import Exporter_001
 import whipMake_001
 import AnimPose_001
 import constraintSwitch
+import ishiiCheck
 
 reload(Exporter_001)#reloading
 reload(whipMake_001)
 reload(AnimPose_001)
 reload(constraintSwitch)
+reload(ishiiCheck)
 
 #window code
 def SERTools_Window():
@@ -42,22 +44,23 @@ def SERTools_Window():
         pm.windowPref( 'localGlobalWindow', remove=True )
     
     #creating window
-    pm.window(windowID, title = 'SER Tools 1.0 | 2018/02/28', widthHeight = (410,200))
+    pm.window(windowID, title = 'SER Tools 1.0 | 2018/03/06', widthHeight = (460,200))
     col = pm.columnLayout( 'columnLayout01', width = 400)
     commonToolsFrame = pm.frameLayout(label = u'共通ツールス', labelIndent = 5, marginHeight = 5, parent = col, nch = 5)
-    pm.rowLayout( 'row1', nc = 5, width = 400)
+    pm.rowLayout( 'row1', nc = 5, width = 450)
     #buttons for first row
     pm.button( 'SER export', label = u'SER 出力', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'export = SERTools_001.Exporter_001.main()')
     
     #buttons for 2nd row
-    modelFrame = pm.frameLayout(label = u'モデルツールス', labelIndent = 5, width = 400, marginHeight = 5, parent = col)
-    pm.rowLayout( 'row2', nc = 5, width = 400)
+    modelFrame = pm.frameLayout(label = u'モデルツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)
+    pm.rowLayout( 'row2', nc = 5, width = 450)
     pm.button( 'SER pose', label = u'SER ポーズテスト', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row2', command = 'poseTest = SERTools_001.AnimPose_001.poseTest()')
     
-    animFrame = pm.frameLayout(label = u'モーションツールス', labelIndent = 5, width = 400, marginHeight = 5, parent = col)
-    pm.rowLayout( 'row3', nc = 5, width = 400)
+    animFrame = pm.frameLayout(label = u'モーションツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)
+    pm.rowLayout( 'row3', nc = 5, width = 450)
     pm.button( 'SER whipmake', label = u'SER 鞭リッグ作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'whip = SERTools_001.whipMake_001.whipMake()')
     pm.button( 'SER constraint', label = u'SER コンすトレイン', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001.constraintSwitch.scriptUI()')
+    #pm.button( 'SER ishiiCheck', label = u'SER 石井チェック', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001.ishiiCheck.ishiiCheckFunc()')
     #pm.button( 'Wrist gbl to loc', label = 'Remove: Left hand Global controller', width = 200, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'wristTranslateControllers', command = 'ChewTools.GlobalLocalSwitch2.L_global_to_local()')
     '''
     pm.rowLayout('L_Hand_to_Weapon_Row', nc = 2, parent = 'columnLayout01' )
@@ -79,4 +82,4 @@ def SERTools_Window():
     pm.button( 'mocap Transfer', label = 'Mocap Copy', width = 100, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'mocapTransfer2', command = 'ChewTools.mocapButton()' )
     '''
     pm.showWindow()
-    pm.window(windowID, edit = True, widthHeight = (405,180))
+    pm.window(windowID, edit = True, widthHeight = (455,180))
