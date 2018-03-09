@@ -232,6 +232,11 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     def cameraExport(self):
         print 'camera export!'
         self.cameraAim = False
+        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera1') == True: #creating a conditional for when the animator prefers to use a no-aim camera
+            print('no aim')
+            pm.select('camera1')
+            self.animExport_2()
+            return
         self.camConstraint() #running the camera script, selected the no-aim camera at the end.
         self.animExport_2() #exporting no-aim camera first
         
@@ -262,8 +267,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             
         elif self.cutsceneExport.isChecked() == True:
            #self.cutSceneExport()
-           pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented まだ書いていません')
-           return
+           pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented /nまだ書いていません')
            pass
         cmds.file(self.saveFileName, open = True, force = True)
         try: #spamming delete entry in case there are entries before already
