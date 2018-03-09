@@ -58,8 +58,8 @@ def SERTools_Window():
     
     animFrame = pm.frameLayout(label = u'モーションツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)
     pm.rowLayout( 'row3', nc = 5, width = 450)
-    pm.button( 'SER whipmake', label = u'SER 鞭リッグ作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'whip = SERTools_001.whipMake_001.whipMake()')
-    pm.button( 'SER constraint', label = u'SER コンすトレイン', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001.constraintSwitch.scriptUI()')
+    pm.button( 'SER whipmake', label = u'SER 鞭リグ作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'whip = SERTools_001.whipMake_001.whipMake()')
+    pm.button( 'SER constraint', label = u'SER コンストレイン', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001.constraintSwitch.scriptUI()')
     #pm.button( 'SER ishiiCheck', label = u'SER 石井チェック', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001.ishiiCheck.ishiiCheckFunc()')
     #pm.button( 'Wrist gbl to loc', label = 'Remove: Left hand Global controller', width = 200, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'wristTranslateControllers', command = 'ChewTools.GlobalLocalSwitch2.L_global_to_local()')
     '''

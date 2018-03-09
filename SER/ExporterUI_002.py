@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'E:/ChewTools/SER/ChewToolsExporter/ExporterUI_002.ui'
 #
-# Created: Fri Mar  2 10:47:39 2018
+# Created: Thu Mar  8 10:26:50 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,11 +34,11 @@ class Ui_MainWindow(object):
         self.charaNameDisplay.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.charaNameDisplay.setObjectName("charaNameDisplay")
         self.ingameButton1 = QtWidgets.QRadioButton(self.MotionTab)
-        self.ingameButton1.setGeometry(QtCore.QRect(130, 140, 86, 16))
+        self.ingameButton1.setGeometry(QtCore.QRect(130, 140, 91, 16))
         self.ingameButton1.setChecked(True)
         self.ingameButton1.setObjectName("ingameButton1")
         self.ingameButton2 = QtWidgets.QRadioButton(self.MotionTab)
-        self.ingameButton2.setGeometry(QtCore.QRect(270, 140, 101, 16))
+        self.ingameButton2.setGeometry(QtCore.QRect(450, 140, 110, 16))
         self.ingameButton2.setObjectName("ingameButton2")
         self.weapNameDisplay = QtWidgets.QLabel(self.MotionTab)
         self.weapNameDisplay.setGeometry(QtCore.QRect(40, 50, 41, 20))
@@ -56,6 +56,9 @@ class Ui_MainWindow(object):
         self.weapNameInput = QtWidgets.QLineEdit(self.MotionTab)
         self.weapNameInput.setGeometry(QtCore.QRect(90, 50, 241, 21))
         self.weapNameInput.setObjectName("weapNameInput")
+        self.ingameButton3 = QtWidgets.QRadioButton(self.MotionTab)
+        self.ingameButton3.setGeometry(QtCore.QRect(260, 140, 151, 16))
+        self.ingameButton3.setObjectName("ingameButton3")
         self.ExporterTab.addTab(self.MotionTab, "")
         self.ModelTab = QtWidgets.QWidget()
         self.ModelTab.setObjectName("ModelTab")
@@ -79,18 +82,19 @@ class Ui_MainWindow(object):
         self.ExporterTab.addTab(self.ModelTab, "")
 
         self.retranslateUi(MainWindow)
-        self.ExporterTab.setCurrentIndex(1)
+        self.ExporterTab.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SER 出力ツール | 2018/03/02", None, -1))
+        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "SER 出力ツール", None, -1))
         self.motionNameDisplay.setText(QtWidgets.QApplication.translate("MainWindow", "モーション名：", None, -1))
         self.exportBox.setText(QtWidgets.QApplication.translate("MainWindow", "出力パス", None, -1))
         self.animExportButton.setText(QtWidgets.QApplication.translate("MainWindow", "出力", None, -1))
         self.charaNameDisplay.setText(QtWidgets.QApplication.translate("MainWindow", "キャラ名", None, -1))
-        self.ingameButton1.setText(QtWidgets.QApplication.translate("MainWindow", "モーション", None, -1))
+        self.ingameButton1.setText(QtWidgets.QApplication.translate("MainWindow", "インモーション", None, -1))
         self.ingameButton2.setText(QtWidgets.QApplication.translate("MainWindow", "カメラ", None, -1))
         self.weapNameDisplay.setText(QtWidgets.QApplication.translate("MainWindow", "武器名", None, -1))
+        self.ingameButton3.setText(QtWidgets.QApplication.translate("MainWindow", "カットシーンモーション（仮）", None, -1))
         self.ExporterTab.setTabText(self.ExporterTab.indexOf(self.MotionTab), QtWidgets.QApplication.translate("MainWindow", "モーション出力", None, -1))
         self.charaNameDisplay_2.setText(QtWidgets.QApplication.translate("MainWindow", "キャラ名", None, -1))
         self.exportBox_2.setText(QtWidgets.QApplication.translate("MainWindow", "出力パス", None, -1))

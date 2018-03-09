@@ -23,13 +23,13 @@ import maya.cmds as cmds
 import pymel.core as pm
 import maya.OpenMayaAnim as animAPI
 
-import Exporter_001
+import Exporter_001Test
 import whipMake_001
 import AnimPose_001
 import constraintSwitch
 import ishiiCheck
 
-reload(Exporter_001)#reloading
+reload(Exporter_001Test)#reloading
 reload(whipMake_001)
 reload(AnimPose_001)
 reload(constraintSwitch)
@@ -49,7 +49,7 @@ def SERTools_Window():
     commonToolsFrame = pm.frameLayout(label = u'共通ツールス', labelIndent = 5, marginHeight = 5, parent = col, nch = 5)
     pm.rowLayout( 'row1', nc = 5, width = 450)
     #buttons for first row
-    pm.button( 'SER export', label = u'SER 出力', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'export = SERTools_001_Test.Exporter_001.main()')
+    pm.button( 'SER export', label = u'SER 出力 Test', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'export = SERTools_001_Test.Exporter_001Test.main()')
     
     #buttons for 2nd row
     modelFrame = pm.frameLayout(label = u'モデルツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)

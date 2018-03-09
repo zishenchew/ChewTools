@@ -17,7 +17,7 @@ from maya import OpenMayaUI as omui
 import pymel.core as pm
 import maya.cmds as cmds
 import maya.mel as mel
-import maya.OpenMayaUI as apiUI
+#import maya.OpenMayaUI as apiUI
 import maya.OpenMayaAnim as animAPI
 import os
 import sys
@@ -195,13 +195,14 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.exportPathInput_2.setText(self.exportPathText) #
             #print 'modelTab' #for debugging purposes
             self.ExporterTab.setCurrentIndex(1)#setting model(1) tab to be switched whenever the tool is loaded
+            
         
 
         
         #radio buttons
         self.ingameExport = self.ingameButton1 #ingame
-        self.cutsceneExport = self.ingameButton2 #cutscene
-        
+        self.camExport = self.ingameButton2 #camera
+        self.cutsceneExport = self.ingameButton3 #cutscene motion
         #export buttons
         
         self.animExportButton.clicked.connect(self.animExpButton)
@@ -215,8 +216,30 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     #functions start
     #___________________________________________________________________________________________________________________________________________________________________________________________________
     
+    
+    def camConstraint(self):
+        newCamGrp = pm.camera() #creating camera
+        newCamShape = newCamGrp[1] #declaring camera shape
+        pm.xform(newCamGrp[0], rotateOrder = 'zxy')#changing rotation order so I can add the camera roll later
+        
+        pm.camera(newCamShape, edit = True, fl = pm.camera('cameraShape1', q = True, fl = True), coi = pm.camera('cameraShape1', q = True, coi = True) ) #adjusting attributes of camera shape
+        pm.parentConstraint('camera1', newCamGrp[0], mo = False) #constraining camera
+        pm.bakeResults(newCamGrp[0], simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()) )#baking the movement into the camera
+        pm.keyframe(newCamGrp[0].rotateZ, edit = True, animation = 'objects', relative = True, valueChange = pm.camera('cameraShape1', q = True, filmRollValue = True) ) #adding the roll to the camera rotateZ
+        pm.select(newCamGrp)
+    
+    
     def cameraExport(self):
         print 'camera export!'
+        self.cameraAim = False
+        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera1') == True: #creating a conditional for when the animator prefers to use a no-aim camera
+            print('no aim')
+            pm.select('camera1')
+            self.animExport_2()
+            return
+        self.camConstraint() #running the camera script, selected the no-aim camera at the end.
+        self.animExport_2() #exporting no-aim camera first
+        
         camGroup = []
         try:
             for i in pm.listRelatives('camera1_group'):
@@ -227,11 +250,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False:
             pm.confirmDialog(title = 'SER 出力ツール', message = u'camera_group が見つけていません')
             return
-        print camGroup
         pm.select('camera1_group', camGroup)
-        
+        self.cameraAim = True
         self.animExport_2()
-    
+        
     def animExpButton(self):
         #combined export button
         self.saveFileName = cmds.file(save = True) #saving before exporting
@@ -240,9 +262,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.animExport_1()
             self.animExport_2()
             
-        elif self.cutsceneExport.isChecked() == True: #camera export
+        elif self.camExport.isChecked() == True: #camera export
             self.cameraExport()
             
+        elif self.cutsceneExport.isChecked() == True:
+           #self.cutSceneExport()
+           pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented /nまだ書いていません')
+           pass
         cmds.file(self.saveFileName, open = True, force = True)
         try: #spamming delete entry in case there are entries before already
             mel.eval('gameExp_DeleteAnimationClipLayout 0;')
@@ -265,7 +291,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         if not os.path.exists(self.exportPath.text()):
             print (u'パスは存在していないので、作ります')
             os.makedirs(self.exportPath.text())
-
+        
         
     def animExport_2(self):
         
@@ -296,9 +322,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         if self.ingameExport.isChecked() == True:#motion export
             mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
             pm.select('Character_Holder')
-        elif self.cutsceneExport.isChecked() == True: #camera export
+        elif self.camExport.isChecked() == True and self.cameraAim == False: #no aim camera export
             mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_cam' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
-        
+        elif self.camExport.isChecked() == True and self.cameraAim == True: #aim camera export
+            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_camAim' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
         mel.eval('gameExp_DoExport();')
         
         mel.eval('gameExp_DeleteAnimationClipLayout 0;') # delete clip afterward
