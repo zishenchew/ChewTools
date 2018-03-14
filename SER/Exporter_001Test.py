@@ -58,6 +58,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         self.fileName = cmds.file(q = True, sceneName = True, shortName = True).rstrip('.mb').rstrip('.ma')
         self.fileNameSplit = self.fileName.rstrip('.ma').split('_')
         
+        #radio buttons
+        self.ingameExport = self.ingameButton1 #ingame
+        self.camExport = self.ingameButton2 #camera
+        self.cutsceneExport = self.ingameButton3 #cutscene motion
+        
+        
+        
         if self.fileNameSplit[0] == 'SER': #charaModel
             self.fileType = 'charaModel'
             self.charaNumber = self.fileNameSplit[1]
@@ -171,7 +178,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'charaModel':
             self.exportPathText = 'D:/SER/SVN/MAYA/model/' + 'SER_0' + self.charaNumber[1:] + '_' + self.fileNameSplit[2] + '/FBX'
         elif self.fileType == 'cutScene':
-            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0]
+            self.exportPathText = self.boneFBX + '/' + self.charaNumber + '/Motions/' + self.weaponIndex[self.weaponNumber]
         
         '''
         INPUTS
@@ -197,12 +204,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.ExporterTab.setCurrentIndex(1)#setting model(1) tab to be switched whenever the tool is loaded
             
         
-
         
-        #radio buttons
-        self.ingameExport = self.ingameButton1 #ingame
-        self.camExport = self.ingameButton2 #camera
-        self.cutsceneExport = self.ingameButton3 #cutscene motion
+        
+        
         #export buttons
         
         self.animExportButton.clicked.connect(self.animExpButton)
@@ -216,6 +220,31 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     #functions start
     #___________________________________________________________________________________________________________________________________________________________________________________________________
     
+    def aimCamMake(self):
+        aimCam = pm.camera(coi = 5, fl = 35, lsr = 1, cs = 1, hfa = 1.41732, hfo = 0, vfa = 0.94488, vfo = 0, ff = 'Fill', ovr = 1, mb = 0, sa = 144, ncp = 0.1, ow = 30, pze = False, hpn = 0, zoom = 1)
+        pm.rename(aimCam[0], 'camera1')
+        mel.eval('cameraMakeNode 2 "";')#creates camera with aim
+        constr = pm.parentConstraint('camera2', 'camera1_group', mo = False) #constraining the aimCam group to old camera
+        camLoc = pm.spaceLocator()
+        pm.xform(camLoc, ws = True, translation = pm.xform('camera1', ws = True, q = True, translation = True))
+        pm.parentConstraint('camera2', camLoc, mo = True)
+        aimLoc = pm.spaceLocator()
+        pm.xform(aimLoc, ws = True, translation = pm.xform('camera1_aim', ws = True, q = True, translation = True))
+        pm.parentConstraint('camera2', aimLoc, mo = True)
+        
+        pm.bakeResults(camLoc, aimLoc, simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()) )#baking the movement into the camera
+        pm.copyKey(camLoc, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))
+        pm.pasteKey('camera1') #pasting
+        pm.copyKey(aimLoc, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))
+        pm.pasteKey('camera1_aim') #pasting
+        
+        pm.copyKey('cameraShape2', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve') #copying all camera focal length and stuff
+        pm.pasteKey('cameraShape1') #pasting
+        pm.copyKey('camera2', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve', at = 'rz') #copying rotate/roll data
+        pm.pasteKey('cameraShape1', attribute = 'filmRollValue') #pasting into roll
+        pm.delete(constr)
+        pm.select('camera1')
+    
     
     def camConstraint(self):
         newCamGrp = pm.camera() #creating camera
@@ -223,6 +252,11 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.xform(newCamGrp[0], rotateOrder = 'zxy')#changing rotation order so I can add the camera roll later
         
         pm.camera(newCamShape, edit = True, fl = pm.camera('cameraShape1', q = True, fl = True), coi = pm.camera('cameraShape1', q = True, coi = True) ) #adjusting attributes of camera shape
+        pm.copyKey('cameraShape1', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve')#copying of camera shape keys
+        try:
+            pm.pasteKey(newCamShape) #pasting
+        except:
+            print('camShape has no keys')
         pm.parentConstraint('camera1', newCamGrp[0], mo = False) #constraining camera
         pm.bakeResults(newCamGrp[0], simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()) )#baking the movement into the camera
         pm.keyframe(newCamGrp[0].rotateZ, edit = True, animation = 'objects', relative = True, valueChange = pm.camera('cameraShape1', q = True, filmRollValue = True) ) #adding the roll to the camera rotateZ
@@ -231,16 +265,33 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     
     def cameraExport(self):
         print 'camera export!'
-        self.cameraAim = False
-        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera1') == True: #creating a conditional for when the animator prefers to use a no-aim camera
-            print('no aim')
-            pm.select('camera1')
-            self.animExport_2()
-            return
-        self.camConstraint() #running the camera script, selected the no-aim camera at the end.
-        self.animExport_2() #exporting no-aim camera first
         
+        
+        if self.camExport.isChecked() == True:
+            if self.fileType == 'charaMotion': #if just weapon hissatsu waza
+                if not os.path.exists(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera'):
+                    print (u'パスは存在していないので、作ります')
+                    os.makedirs(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera')
+            elif self.fileType == 'kyojinMotion': #if is kyojinka hissatsu waza
+                if not os.path.exists(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0]):
+                    print (u'パスは存在していないので、作ります')
+                    os.makedirs(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0])
+        
+        self.cameraAim = False
+        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
+            print('no aim')
+            self.aimCamMake()
+            self.animExport_2()
+            #if pm.objExists('camera1_group'):
+            #    print('camera1_group exists')
+            #print(test)
+        else:
+            self.camConstraint() #running the camera script, selected the no-aim camera at the end.
+            self.animExport_2() #exporting no-aim camera first
+        #camera2 will always be the one without the aim
+        #the first conditional will export camera2 regardless of which function it is running
         camGroup = []
+        
         try:
             for i in pm.listRelatives('camera1_group'):
                 camGroup.append(i)
@@ -312,7 +363,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         except:
             pass
         mel.eval('gameExp_AddNewAnimationClip 1;') # adds a new clip
-        mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + self.exportPath.text() + '";') #setting address
+        if self.camExport.isChecked() == True:
+            if self.fileType == 'charaMotion': #if just weapon hissatsu waza
+                mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera' + '";') #setting address for camera export
+            elif self.fileType == 'kyojinMotion': #if is kyojinka hissatsu waza
+                mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0] + '";') #setting address for camera export
+        else:
+            mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + self.exportPath.text() + '";') #setting address
         
         formLayout1 = pm.layout('anim_gameExporterExportTypeFormLayout', query = True, childArray = True)[0] #formLayout1, formLayout2, fieldText1 and self.clipNameFieldpy are all 
         formLayout2 = pm.layout('anim_gameFbxExporterScrollLayout', query = True, childArray = True)[0]
@@ -323,10 +380,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
             pm.select('Character_Holder')
         elif self.camExport.isChecked() == True and self.cameraAim == False: #no aim camera export
-            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_cam' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
+            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_camCheck' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
         elif self.camExport.isChecked() == True and self.cameraAim == True: #aim camera export
-            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_camAim' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
-        mel.eval('gameExp_DoExport();')
+            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_cam' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
+        mel.eval('gameExp_DoExport();') #this is the point at which it exports
         
         mel.eval('gameExp_DeleteAnimationClipLayout 0;') # delete clip afterward
         #end of export
