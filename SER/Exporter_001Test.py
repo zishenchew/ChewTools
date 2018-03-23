@@ -70,16 +70,21 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.charaNumber = self.fileNameSplit[1]
             self.weaponNumber = None
             #print('charaModel') #for debugging purposes
-        elif len(self.fileNameSplit[0]) == 2:
+        elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] != 'Resonize':
             self.fileType = 'commonMotion'
             self.charaNumber = None
             self.weaponNumber = self.fileNameSplit[0]
             #print('commonMotion') #for debugging purposes
+        elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] == 'Resonize':
+            self.fileType = 'kyojinCommonStep'
+            self.charaNumber = None
+            self.weaponNumber = self.fileNameSplit[0]
+            
         elif len(self.fileNameSplit[0]) == 3 and self.fileNameSplit[0] != 'SER':
             if len(self.fileNameSplit[1]) == 4:
                 self.fileType = 'cutScene'
                 self.charaNumber = self.fileNameSplit[0]
-                self.weaponNumber = 'cs'
+                self.weaponNumber = self.fileNameSplit[1][:2]
             else:
                 self.fileType = 'charaMotion'
                 self.charaNumber = self.fileNameSplit[0]
@@ -89,8 +94,16 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                     self.weaponNumber = 're'
                 else:
                     self.weaponNumber = self.fileNameSplit[1]
-
-
+            
+            if self.fileNameSplit[1][:13] == 'ResonizeIntro':
+                self.fileType = 'kyojinIntro'
+                self.weaponNumber = 'rIntro'
+            
+        elif self.fileNameSplit[0] == 'CutScene':
+            self.fileType = 'chain'
+            self.charaNumber = '0'
+            self.weaponNumber = '0'
+            
             
         self.currentAddress = cmds.file(q = True, location = True).rstrip(self.fileName)
         
@@ -151,7 +164,16 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'cutScene':
             self.charaNameText = self.charaNameIndex[self.charaNumber]                   #cutScene
             self.weaponNameText = u'必殺技'#cutScene
-            
+        elif self.fileType == 'chain':
+            self.charaNameText = 'Chain'
+            self.weaponNameText = 'Chain'
+        elif self.fileType == 'kyojinIntro':
+            self.charaNameText = self.charaNameIndex[self.charaNumber]  #kyojinIntro
+            self.weaponNameText = 'Resonize Intro'
+        elif self.fileType == 'kyojinCommonStep':
+            self.charaNameText = u'キョウジン通常ステップ'                   #kyojin common step
+            self.weaponNameText = 'Resonize Step'
+        
         '''
         #defining weapon name
         if self.fileType == 'charaMotion':
@@ -175,16 +197,27 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.exportPathText = self.weaponPathIndex[self.weaponNumber]
             if self.fuji == 1:
                 self.exportPathText = 'D:/SER/SER_SVN' + self.weaponPathIndex[self.weaponNumber][10:]
+            if self.fileNameSplit[1][:8] == 'Resonize':
+                self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         elif self.fileType == 'charaModel':
             self.exportPathText = 'D:/SER/SVN/MAYA/model/' + 'SER_0' + self.charaNumber[1:] + '_' + self.fileNameSplit[2] + '/FBX'
         elif self.fileType == 'cutScene':
             self.exportPathText = self.boneFBX + '/' + self.charaNumber + '/Motions/' + self.weaponIndex[self.weaponNumber]
+        elif self.fileType == 'chain':
+            if self.fuji == 1:
+                self.exportPathText = r'D:/SER/SER_SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
+            else:
+                self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
+        elif self.fileType == 'kyojinIntro':
+            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_01_intro'
+        elif self.fileType == 'kyojinCommonStep':
+            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         
         '''
         INPUTS
         '''
         #motion
-        if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene':
+        if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene' or self.fileType == 'chain' or self.fileType == 'kyojinIntro' or self.fileType == 'kyojinCommonStep':
             self.charaName = self.charaNameInput
             self.charaName.setText(self.charaNameText)
             self.weaponName = self.weapNameInput
@@ -204,16 +237,40 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.ExporterTab.setCurrentIndex(1)#setting model(1) tab to be switched whenever the tool is loaded
             
         
-        
-        
-        
         #export buttons
-        
         self.animExportButton.clicked.connect(self.animExpButton)
         self.modelExportButton.clicked.connect(self.modelExport)
         
-        #self.folderSearchButton.clicked.connect(self.folderSearch)#initialising button for folder search, not in use now
+        
+        
+        #radio button change
+        self.ingameExport.toggled.connect(self.ingameClicked)
+        self.camExport.toggled.connect(self.camClicked)
+        
+        print(self.fileType, self.fileNameSplit[1])
+        
+    #this part is for the change in radio button
+    def ingameClicked(self, enabled):
+        if enabled:
+            self.exportPath.setText(self.exportPathText)
     
+    def camClicked(self, enabled):
+        if enabled:
+            if self.fileType == 'charaMotion':
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera')
+            elif self.fileType == 'cutScene':
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera')
+            elif self.fileType == 'kyojinMotion' and self.fileNameSplit[1] != 'ResonizeStep': #not resonize step
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0])
+            elif self.fileType == 'kyojinMotion' and self.fileNameSplit[1] == 'ResonizeStep': #resonize step  path adjustment
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
+            elif self.fileType == 'kyojinCommonStep': #kyojin common step path
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
+            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Intro':
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_01')
+            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Finish':
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_02_finish')
+                
     
     #___________________________________________________________________________________________________________________________________________________________________________________________________
     #
@@ -239,11 +296,22 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.pasteKey('camera1_aim') #pasting
         
         pm.copyKey('cameraShape2', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve') #copying all camera focal length and stuff
-        pm.pasteKey('cameraShape1') #pasting
+        try:
+            pm.pasteKey('cameraShape1') #pasting
+        except:
+            print('camShape has no keys')
         pm.copyKey('camera2', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve', at = 'rz') #copying rotate/roll data
         pm.pasteKey('cameraShape1', attribute = 'filmRollValue') #pasting into roll
         pm.delete(constr)
-        pm.select('camera1')
+        pm.setAttr('camera1_group.tx', 0)
+        pm.setAttr('camera1_group.ty', 0)
+        pm.setAttr('camera1_group.tz', 0)
+        pm.setAttr('camera1_group.rx', 0)
+        pm.setAttr('camera1_group.ry', 0)
+        pm.setAttr('camera1_group.rz', 0)
+        pm.setKeyframe('camera1_group', time = 0)
+        print('keyed camera1_group')
+        pm.select('camera2')
     
     
     def camConstraint(self):
@@ -265,17 +333,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     
     def cameraExport(self):
         print 'camera export!'
-        
-        
-        if self.camExport.isChecked() == True:
-            if self.fileType == 'charaMotion': #if just weapon hissatsu waza
-                if not os.path.exists(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera'):
-                    print (u'パスは存在していないので、作ります')
-                    os.makedirs(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera')
-            elif self.fileType == 'kyojinMotion': #if is kyojinka hissatsu waza
-                if not os.path.exists(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0]):
-                    print (u'パスは存在していないので、作ります')
-                    os.makedirs(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0])
+        if not os.path.exists(self.exportPath.text()): #checking if the folder exists
+            print (u'パスは存在していないので、作ります')
+            os.makedirs(self.exportPath.text())
         
         self.cameraAim = False
         if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
@@ -290,6 +350,38 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.animExport_2() #exporting no-aim camera first
         #camera2 will always be the one without the aim
         #the first conditional will export camera2 regardless of which function it is running
+        
+        ################## fix for camera group not exporting
+        cam3 = pm.camera()
+        mel.eval('cameraMakeNode 2 "";')#creates camera with aim
+        cam3grp = pm.listRelatives(cam3[0], parent = True)
+        pm.camera(cam3[1], edit = True, fl = pm.camera('cameraShape1', q = True, fl = True), coi = pm.camera('cameraShape1', q = True, coi = True) ) #adjusting attributes of camera shape
+        try:
+            pm.copyKey('camera1_group', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value())) #copying cam1 group translate
+            pm.pasteKey(cam3grp) #pasting
+        except:
+            print 'no group key to paste'
+        try:
+            pm.copyKey('camera1', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))
+            pm.pasteKey(cam3[0]) #pasting
+        except:
+            print 'no camera key to paste'
+        try:
+            pm.copyKey('camera1_aim', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value())) #copying cam1 group translate
+            pm.pasteKey(pm.listRelatives(cam3grp)[1]) #pasting
+        except:
+            print 'no aim key to copy'
+        try:
+            pm.copyKey('camera1Shape', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))
+            pm.pasteKey(cam3[1]) #pasting
+        except:
+            print 'no cameraShape key to copy'
+        pm.delete('camera1_group')
+        pm.rename(cam3[0], 'camera1')
+        pm.rename(pm.listRelatives(cam3grp)[1], 'camera1_aim')
+        pm.rename(cam3grp, 'camera1_group')
+        ################## fix for camera group not exporting end
+        
         camGroup = []
         
         try:
@@ -329,7 +421,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
         print('SER Export complete!')
         
-    
+        
     def animExport_1(self):
         
         #perform all the requisite checks and tasks before exporting
@@ -337,6 +429,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         self.removeNamespace()
         self.bakeHIK()
         self.deleteNonHIK()
+        
+        #print(fail)
         
         #this section of code for doing checks if folder exists, and if it doesn't, creating it
         if not os.path.exists(self.exportPath.text()):
@@ -363,13 +457,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         except:
             pass
         mel.eval('gameExp_AddNewAnimationClip 1;') # adds a new clip
-        if self.camExport.isChecked() == True:
-            if self.fileType == 'charaMotion': #if just weapon hissatsu waza
-                mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Special/' + self.fileNameSplit[0] + '/Special_Camera' + '";') #setting address for camera export
-            elif self.fileType == 'kyojinMotion': #if is kyojinka hissatsu waza
-                mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_03_hit/' + self.fileNameSplit[0] + '";') #setting address for camera export
-        else:
-            mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + self.exportPath.text() + '";') #setting address
+        
+        mel.eval('setAttr($gGameFbxExporterCurrentNode + ".exportPath") - type "string" "' + self.exportPath.text() + '";') #setting address
         
         formLayout1 = pm.layout('anim_gameExporterExportTypeFormLayout', query = True, childArray = True)[0] #formLayout1, formLayout2, fieldText1 and self.clipNameFieldpy are all 
         formLayout2 = pm.layout('anim_gameFbxExporterScrollLayout', query = True, childArray = True)[0]
@@ -394,6 +483,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #if pm.objExists('ikJoint_Weapon2'):
         #    pm.bakeResults(pm.listRelatives('Helper_Weapon1'), time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True, sampleBy = 1, oversamplingRate = 1, disableImplicitControl = True, preserveOutsideKeys = True, sparseAnimCurveBake = False, removeBakedAttributeFromLayer = False, removeBakedAnimFromLayer = False, bakeOnOverrideLayer = False, minimizeRotation  = True, controlPoints = False, shape = True)
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
+        
+        pm.mel.mayaHIKsetRigInput("Character1")#setting back to humanIK
+        pm.mel.hikUpdateContextualUI()#updating the humanIK UI
+        pm.mel.hikUpdateSourceList()
         
         pm.mel.hikSetCurrentCharacter("Character1") #selecting character
         pm.mel.hikUpdateCurrentCharacterFromScene()

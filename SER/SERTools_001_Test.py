@@ -44,7 +44,7 @@ def SERTools_Window():
         pm.windowPref( 'localGlobalWindow', remove=True )
     
     #creating window
-    pm.window(windowID, title = 'SER Tools 1.0 | 2018/03/06', widthHeight = (460,200))
+    pm.window(windowID, title = 'SER Tools 1.0 | 2018/03/023', widthHeight = (460,200))
     col = pm.columnLayout( 'columnLayout01', width = 400)
     commonToolsFrame = pm.frameLayout(label = u'共通ツールス', labelIndent = 5, marginHeight = 5, parent = col, nch = 5)
     pm.rowLayout( 'row1', nc = 5, width = 450)

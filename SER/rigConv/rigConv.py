@@ -217,8 +217,8 @@ def reverseConstraint():
     pm.parentConstraint(ikLFoot, 'ikHandleLeftFoot', mo = True)#
     pm.parentConstraint(COG, 'Character_Hips', mo = True)
 
-    pm.parentConstraint(ikRH, 'Character_RightFoot', mo = True)#
-    pm.parentConstraint(ikRH, 'Character_LeftFoot', mo = True)#
+    #pm.parentConstraint(ikRFoot, 'Character_RightFoot', mo = True)#
+    #pm.parentConstraint(ikLFoot, 'Character_LeftFoot', mo = True)#
     '''
     pm.parentConstraint(ikRH, 'Character_RightHand', mo = True)#
     pm.parentConstraint(ikLH, 'Character_LeftHand', mo = True)#
