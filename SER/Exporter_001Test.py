@@ -70,16 +70,19 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.charaNumber = self.fileNameSplit[1]
             self.weaponNumber = None
             #print('charaModel') #for debugging purposes
-        elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] != 'Resonize':
-            self.fileType = 'commonMotion'
-            self.charaNumber = None
-            self.weaponNumber = self.fileNameSplit[0]
-            #print('commonMotion') #for debugging purposes
         elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] == 'Resonize':
             self.fileType = 'kyojinCommonStep'
             self.charaNumber = None
             self.weaponNumber = self.fileNameSplit[0]
-            
+        elif self.fileNameSplit[0] == 'CutScene' and self.fileNameSplit[1] == 'chain':
+            self.fileType = 'chain'
+            self.charaNumber = '0'
+            self.weaponNumber = '0'
+        elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] != 'Resonize' and self.fileNameSplit[1] != 'CutScene' :
+            self.fileType = 'commonMotion'
+            self.charaNumber = None
+            self.weaponNumber = self.fileNameSplit[0]
+            #print('commonMotion') #for debugging purposes
         elif len(self.fileNameSplit[0]) == 3 and self.fileNameSplit[0] != 'SER':
             if len(self.fileNameSplit[1]) == 4:
                 self.fileType = 'cutScene'
@@ -94,17 +97,21 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                     self.weaponNumber = 're'
                 else:
                     self.weaponNumber = self.fileNameSplit[1]
-            
             if self.fileNameSplit[1][:13] == 'ResonizeIntro':
                 self.fileType = 'kyojinIntro'
                 self.weaponNumber = 'rIntro'
-            
-        elif self.fileNameSplit[0] == 'CutScene':
-            self.fileType = 'chain'
-            self.charaNumber = '0'
-            self.weaponNumber = '0'
-            
-            
+        elif self.fileNameSplit[0] == 'CutScene' and self.fileNameSplit[1] == 'ResonizeStep':
+            self.fileType = 'kyojinCommonStep'
+            self.charaNumber = None
+            self.weaponNumber = self.fileNameSplit[0]
+        
+        elif self.fileNameSplit[0] == 'CutScene' and self.fileNameSplit[1] == 'ResonizeFinish':
+            self.fileType = 'kyojinCommonFinish'
+            self.charaNumber = None
+            self.weaponNumber = self.fileNameSplit[0]
+        
+        
+        
         self.currentAddress = cmds.file(q = True, location = True).rstrip(self.fileName)
         
         
@@ -165,7 +172,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.charaNameText = self.charaNameIndex[self.charaNumber]                   #cutScene
             self.weaponNameText = u'必殺技'#cutScene
         elif self.fileType == 'chain':
-            self.charaNameText = 'Chain'
+            self.charaNameText = 'キョウジン'
             self.weaponNameText = 'Chain'
         elif self.fileType == 'kyojinIntro':
             self.charaNameText = self.charaNameIndex[self.charaNumber]  #kyojinIntro
@@ -173,6 +180,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'kyojinCommonStep':
             self.charaNameText = u'キョウジン通常ステップ'                   #kyojin common step
             self.weaponNameText = 'Resonize Step'
+        elif self.fileType == 'kyojinCommonFinish':
+            self.charaNameText = u'キョウジン通常Finish'                   #kyojin common step
+            self.weaponNameText = 'Resonize Finish'
         
         '''
         #defining weapon name
@@ -211,6 +221,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'kyojinIntro':
             self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_01_intro'
         elif self.fileType == 'kyojinCommonStep':
+            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
+        elif self.fileType == 'kyojinCommonFinish':
             self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         
         '''
@@ -266,11 +278,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
             elif self.fileType == 'kyojinCommonStep': #kyojin common step path
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
-            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Intro':
+            elif self.fileType == 'chain' and self.fileNameSplit[3] == 'Intro':
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_01')
-            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Finish':
+            elif self.fileType == 'chain' and self.fileNameSplit[3] == 'Finish':
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_02_finish')
-                
+            
+            elif self.fileType == 'kyojinCommonFinish' and self.fileNameSplit[1] == 'ResonizeFinish': #resonize finish
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_04_finish')
     
     #___________________________________________________________________________________________________________________________________________________________________________________________________
     #
