@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.fileType = 'kyojinCommonStep'
             self.charaNumber = None
             self.weaponNumber = self.fileNameSplit[0]
-        elif self.fileNameSplit[0] == 'CutScene' and self.fileNameSplit[1] == 'chain':
+        elif self.fileNameSplit[0] == 'CutScene' and self.fileNameSplit[1] == 'Chain':
             self.fileType = 'chain'
             self.charaNumber = '0'
             self.weaponNumber = '0'
@@ -219,7 +219,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             else:
                 self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         elif self.fileType == 'kyojinIntro':
-            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_01_intro'
+            self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/%s/Motions/Resonize' %self.fileNameSplit[0]
         elif self.fileType == 'kyojinCommonStep':
             self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         elif self.fileType == 'kyojinCommonFinish':
@@ -229,7 +229,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         INPUTS
         '''
         #motion
-        if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene' or self.fileType == 'chain' or self.fileType == 'kyojinIntro' or self.fileType == 'kyojinCommonStep':
+        if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene' or self.fileType == 'chain' or self.fileType == 'kyojinIntro' or self.fileType == 'kyojinCommonStep' or self.fileType == 'kyojinCommonFinish':
             self.charaName = self.charaNameInput
             self.charaName.setText(self.charaNameText)
             self.weaponName = self.weapNameInput
@@ -278,11 +278,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
             elif self.fileType == 'kyojinCommonStep': #kyojin common step path
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
-            elif self.fileType == 'chain' and self.fileNameSplit[3] == 'Intro':
+            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Intro':
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_01')
-            elif self.fileType == 'chain' and self.fileNameSplit[3] == 'Finish':
+            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Finish':
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_02_finish')
             
+            elif self.fileType == 'kyojinIntro' and self.fileNameSplit[1] == 'ResonizeIntro': #resonize intro
+                self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_01_intro/' + self.fileNameSplit[0])
             elif self.fileType == 'kyojinCommonFinish' and self.fileNameSplit[1] == 'ResonizeFinish': #resonize finish
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_04_finish')
     
@@ -291,7 +293,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     #functions start
     #___________________________________________________________________________________________________________________________________________________________________________________________________
     
+    def cameraShapeRename(self):
+        if pm.objExists('camera1Shape'):
+            pm.rename('camera1Shape', 'cameraShape1')
+    
+    
     def aimCamMake(self):
+        self.cameraShapeRename()
         aimCam = pm.camera(coi = 5, fl = 35, lsr = 1, cs = 1, hfa = 1.41732, hfo = 0, vfa = 0.94488, vfo = 0, ff = 'Fill', ovr = 1, mb = 0, sa = 144, ncp = 0.1, ow = 30, pze = False, hpn = 0, zoom = 1)
         pm.rename(aimCam[0], 'camera1')
         mel.eval('cameraMakeNode 2 "";')#creates camera with aim
@@ -314,6 +322,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             pm.pasteKey('cameraShape1') #pasting
         except:
             print('camShape has no keys')
+        pm.setAttr('cameraShape1.filmFit', 2)
         pm.copyKey('camera2', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve', at = 'rz') #copying rotate/roll data
         pm.pasteKey('cameraShape1', attribute = 'filmRollValue') #pasting into roll
         pm.delete(constr)
@@ -328,12 +337,14 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.select('camera2')
     
     
-    def camConstraint(self):
+    def camConstraint(self): #making camCheck
+        self.cameraShapeRename()
         newCamGrp = pm.camera() #creating camera
         newCamShape = newCamGrp[1] #declaring camera shape
         pm.xform(newCamGrp[0], rotateOrder = 'zxy')#changing rotation order so I can add the camera roll later
         
         pm.camera(newCamShape, edit = True, fl = pm.camera('cameraShape1', q = True, fl = True), coi = pm.camera('cameraShape1', q = True, coi = True) ) #adjusting attributes of camera shape
+        pm.setAttr(newCamShape.filmFit, 2)
         pm.copyKey('cameraShape1', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), option = 'curve')#copying of camera shape keys
         try:
             pm.pasteKey(newCamShape) #pasting
