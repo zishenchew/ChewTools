@@ -41,9 +41,8 @@ class PrismToolsMainWindow():
         menuBar = pm.menuBarLayout()
         pm.menu( label='キャラ' )
         for i in self.motionFolders:
-            item = pm.menuItem(label=i)
             mainBody_arg = partial(self.mainBody, i)
-            pm.menuItem(item, edit = True, command = mainBody_arg)
+            item = pm.menuItem(label=i, command = mainBody_arg)
         
         #label
         self.masterCol = pm.columnLayout('master col', width = 600)
@@ -53,7 +52,7 @@ class PrismToolsMainWindow():
         sceneNameLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
         pm.text(label = u'シーン名：', width = 85, align = 'right')
         pm.text(label = '', width = 15, align = 'left', parent = sceneNameLayout, enable = False) #spacer
-        self.sceneName = pm.textField(width = 200)
+        self.sceneName = pm.textField(width = 400)
         
         #button
         yomikomiLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
@@ -63,10 +62,9 @@ class PrismToolsMainWindow():
         pm.button(label = '開く', command = self.openFile, width = 75, parent = yomikomiLayout, height = 20)
         
         exportLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
-        #pm.text(label = '', width = 25, align = 'left', parent = exportLayout, enable = False)
         pm.text(label = u'保存：', width = 85, height = 20, align = 'right', parent = exportLayout)
         pm.text(label = '', width = 15, align = 'left', parent = exportLayout, enable = False) #spacer
-        pm.button(label = '保存', command = lambda x: self.placeHolder(u'保存'), width = 75, parent = exportLayout, height = 20)
+        pm.button(label = '保存', command = self.saveFile, width = 75, parent = exportLayout, height = 20)
         pm.button(label = '出力', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = exportLayout, height = 20)
 
         #radioLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
@@ -74,10 +72,14 @@ class PrismToolsMainWindow():
         #pm.button(label = '実行', command = self.openFile, width = 100, parent = radioLayout)
         
         
-        buttonLayout = pm.rowLayout(parent = self.masterCol, nc = 5)
-        pm.button(label = '開く', command = self.openFile, width = 75, parent = buttonLayout)
-        pm.button(label = '保存', command = self.saveImageCreate, width = 75, parent = buttonLayout)
-        pm.button(label = '出力', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = buttonLayout)
+        #buttonLayout = pm.rowLayout(parent = self.masterCol, nc = 5)
+        #pm.button(label = '開く', command = self.openFile, width = 75, parent = buttonLayout)
+        #pm.button(label = '保存 create image', command = self.saveImageCreate, width = 75, parent = buttonLayout)
+        #pm.button(label = '出力', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = buttonLayout)
+
+
+        spacerLayout = pm.rowLayout(parent = self.masterCol, nc = 5)
+        pm.text(label = '', width = 15, height = 25, align = 'left', parent = spacerLayout, enable = False) #spacer
 
         pm.showWindow()
         #pm.window(windowID, edit = True, widthHeight = (600,800))
@@ -114,48 +116,46 @@ class PrismToolsMainWindow():
         #print self.mayaFolder + path
 
 
+
     def fillSceneName(self, fieldName, mayaFalse):
         pm.textField(self.sceneName, edit = True, text = fieldName)
 
     
     def fun(self, tex):
         print(self.mayaFolder + self.path + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
-        pass
+
+
     def openFile(self, mayaFalse):
         print(self.testPath + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
         cmds.file(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True), open = True, force = True)
-        #print 'haha'
+        
+        
+
+    def saveFile(self, mayaFalse):
+        if pm.textField(self.sceneName, q = True, text = True) in self.fileList: #check if the text input is in the list of files in the directory
+            print 'overwrite and save'
+            cmds.file(save = True) #saving before exporting
+            self.saveImageCreate(False)
+            self.mainBody(self.path, False)
+        else:
+            print 'save new file'
+            cmds.file(rename = self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True)) #saving before exporting
+            cmds.file(save = True, type = 'mayaAscii') #saving before exporting
+            self.saveImageCreate(False)
+            #call mainBody once more
+            self.mainBody(self.path, False)
+
         
     def comment(self, mayaFalse):
         pm.promptDialog(title = 'Prism Scene Manager', message = 'コメントを書いてください')
-        pass
+        
         
     def saveImageCreate(self, mayaFalse):
-        pm.playblast(completeFilename = str(self.mayaFolder + self.path + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True)).rstrip('.ma') + '.png', format = 'image', compression = 'png', frame = [pm.currentTime()], forceOverwrite = True, viewer = False, width = 100, height = 100, showOrnaments = False, p = 100, os = True)
+        pm.playblast(completeFilename = str(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True)).rstrip('.ma') + '.png', format = 'image', compression = 'png', frame = [pm.currentTime()], forceOverwrite = True, viewer = False, width = 100, height = 100, showOrnaments = False, p = 100, os = True)
         #self.saveFileName = cmds.file(save = True) #saving before exporting
-        pass
 
     def placeHolder(self, butt = 'test'):
         pm.confirmDialog(title = 'Prism Scene Manager', message = u'%s しました。 TEST ONLY' %butt)
-        pass
 
-
-
-'''
-class PrismToolsFunction(PrismToolsMainWindow):
-    def __init__(self):
-        PrismToolsMainWindow.__init__(self)
-        
-    def fun(self, tex):
-        print 'haha'
-        print tex
-        pass
-    def radioBut(self, *args):
-        print(pm.radioCollection(self.radColle, sl = True, q = True))
-        print(self.testPath + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
-        
-    def openFile(self):
-        pass
-'''
 
 x = PrismToolsMainWindow().uiWindow()
