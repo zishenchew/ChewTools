@@ -78,6 +78,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.fileType = 'chain'
             self.charaNumber = '0'
             self.weaponNumber = '0'
+        elif self.fileNameSplit[0] == '00' and self.fileNameSplit[1] == 'CutScene' and self.fileNameSplit[2] == 'Chain':
+            self.fileType = 'chain'
+            self.charaNumber = '0'
+            self.weaponNumber = '0'
         elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] != 'Resonize' and self.fileNameSplit[1] != 'CutScene' :
             self.fileType = 'commonMotion'
             self.charaNumber = None
@@ -172,7 +176,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.charaNameText = self.charaNameIndex[self.charaNumber]                   #cutScene
             self.weaponNameText = u'必殺技'#cutScene
         elif self.fileType == 'chain':
-            self.charaNameText = 'キョウジン'
+            self.charaNameText = u'連携'
             self.weaponNameText = 'Chain'
         elif self.fileType == 'kyojinIntro':
             self.charaNameText = self.charaNameIndex[self.charaNumber]  #kyojinIntro
@@ -183,6 +187,12 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'kyojinCommonFinish':
             self.charaNameText = u'キョウジン通常Finish'                   #kyojin common step
             self.weaponNameText = 'Resonize Finish'
+        
+        if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion':
+            self.ingame = True
+        
+        else:
+            self.ingame = False
         
         '''
         #defining weapon name
@@ -226,7 +236,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         
         '''
-        INPUTS
+        INPUTS ########################################################################################################################################################
         '''
         #motion
         if self.fileType == 'charaMotion' or self.fileType == 'commonMotion' or self.fileType == 'kyojinMotion' or self.fileType == 'cutScene' or self.fileType == 'chain' or self.fileType == 'kyojinIntro' or self.fileType == 'kyojinCommonStep' or self.fileType == 'kyojinCommonFinish':
@@ -261,6 +271,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         print(self.fileType, self.fileNameSplit[1])
         
+        
     #this part is for the change in radio button
     def ingameClicked(self, enabled):
         if enabled:
@@ -278,9 +289,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
             elif self.fileType == 'kyojinCommonStep': #kyojin common step path
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_02_step')
-            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Intro':
+            elif self.fileType == 'chain' and 'Intro' in self.fileNameSplit:
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_01')
-            elif self.fileType == 'chain' and self.fileNameSplit[2] == 'Finish':
+            elif self.fileType == 'chain' and 'Finish' in self.fileNameSplit:
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Chain_02_finish')
             
             elif self.fileType == 'kyojinIntro' and self.fileNameSplit[1] == 'ResonizeIntro': #resonize intro
@@ -288,17 +299,37 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             elif self.fileType == 'kyojinCommonFinish' and self.fileNameSplit[1] == 'ResonizeFinish': #resonize finish
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_04_finish')
     
-    #___________________________________________________________________________________________________________________________________________________________________________________________________
+    #_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
     #
     #functions start
-    #___________________________________________________________________________________________________________________________________________________________________________________________________
+    #_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+    
+    
+    def cameraExport(self):
+        print 'camera export!'
+        if not os.path.exists(self.exportPath.text()): #checking if the folder exists
+            print (u'パスは存在していないので、作ります')
+            os.makedirs(self.exportPath.text())
+        
+        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
+            print('no aim')
+            #export the camera right away
+            pm.select('camera2')
+            pm.setAttr('cameraShape2.filmFit', 2)
+            self.animExport_2() #exporting no-aim camera first
+            
+        else:
+            #create no-aim cam and then export it
+            self.camConstraint() #running the camera script, selected the no-aim camera at the end.
+            pm.setAttr('cameraShape2.filmFit', 2)
+            self.animExport_2() #exporting no-aim camera first
     
     def cameraShapeRename(self):
         if pm.objExists('camera1Shape'):
             pm.rename('camera1Shape', 'cameraShape1')
     
     
-    def aimCamMake(self):
+    def aimCamMake(self): #will be deprecated
         self.cameraShapeRename()
         aimCam = pm.camera(coi = 5, fl = 35, lsr = 1, cs = 1, hfa = 1.41732, hfo = 0, vfa = 0.94488, vfo = 0, ff = 'Fill', ovr = 1, mb = 0, sa = 144, ncp = 0.1, ow = 30, pze = False, hpn = 0, zoom = 1)
         pm.rename(aimCam[0], 'camera1')
@@ -337,7 +368,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.select('camera2')
     
     
-    def camConstraint(self): #making camCheck
+    def camConstraint(self): #making no-aim camera
         self.cameraShapeRename()
         newCamGrp = pm.camera() #creating camera
         newCamShape = newCamGrp[1] #declaring camera shape
@@ -356,72 +387,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.select(newCamGrp)
     
     
-    def cameraExport(self):
-        print 'camera export!'
-        if not os.path.exists(self.exportPath.text()): #checking if the folder exists
-            print (u'パスは存在していないので、作ります')
-            os.makedirs(self.exportPath.text())
         
-        self.cameraAim = False
-        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
-            print('no aim')
-            self.aimCamMake()
-            self.animExport_2()
-            #if pm.objExists('camera1_group'):
-            #    print('camera1_group exists')
-            #print(test)
-        else:
-            self.camConstraint() #running the camera script, selected the no-aim camera at the end.
-            self.animExport_2() #exporting no-aim camera first
-        #camera2 will always be the one without the aim
-        #the first conditional will export camera2 regardless of which function it is running
         
-        ################## fix for camera group not exporting
-        cam3 = pm.camera()
-        mel.eval('cameraMakeNode 2 "";')#creates camera with aim
-        cam3grp = pm.listRelatives(cam3[0], parent = True)
-        pm.camera(cam3[1], edit = True, fl = pm.camera('cameraShape1', q = True, fl = True), coi = pm.camera('cameraShape1', q = True, coi = True) ) #adjusting attributes of camera shape
-        try:
-            pm.copyKey('camera1_group', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value())) #copying cam1 group translate
-            pm.pasteKey(cam3grp) #pasting
-        except:
-            print 'no group key to paste'
-        try:
-            pm.copyKey('camera1', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))
-            pm.pasteKey(cam3[0]) #pasting
-        except:
-            print 'no camera key to paste'
-        try:
-            pm.copyKey('camera1_aim', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value())) #copying cam1 group translate
-            pm.pasteKey(pm.listRelatives(cam3grp)[1]) #pasting
-        except:
-            print 'no aim key to copy'
-        try:
-            pm.copyKey('camera1Shape', time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()))
-            pm.pasteKey(cam3[1]) #pasting
-        except:
-            print 'no cameraShape key to copy'
-        pm.delete('camera1_group')
-        pm.rename(cam3[0], 'camera1')
-        pm.rename(pm.listRelatives(cam3grp)[1], 'camera1_aim')
-        pm.rename(cam3grp, 'camera1_group')
-        ################## fix for camera group not exporting end
-        
-        camGroup = []
-        
-        try:
-            for i in pm.listRelatives('camera1_group'):
-                camGroup.append(i)
-        except:
-            for i in pm.listRelatives('camera_group'):
-                camGroup.append(i)
-        if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False:
-            pm.confirmDialog(title = 'SER 出力ツール', message = u'camera_group が見つけていません')
-            return
-        pm.select('camera1_group', camGroup)
-        self.cameraAim = True
-        self.animExport_2()
-        
+
     def animExpButton(self):
         #combined export button
         self.saveFileName = cmds.file(save = True) #saving before exporting
@@ -452,7 +420,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #perform all the requisite checks and tasks before exporting
         self.importReference()
         self.removeNamespace()
+        self.helperShadowSetup()
         self.bakeHIK()
+        self.helperShadowBake()
         self.deleteNonHIK()
         
         #print(fail)
@@ -461,6 +431,16 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         if not os.path.exists(self.exportPath.text()):
             print (u'パスは存在していないので、作ります')
             os.makedirs(self.exportPath.text())
+            
+    def helperShadowSetup(self):
+        if self.ingame == False:
+            pm.parentConstraint('Character_Hips', 'Helper_Shadow', st = 'y', sr = ['x', 'y', 'z'])
+            pm.setAttr('Helper_Shadow.sx', 0.001)
+            pm.setAttr('Helper_Shadow.sy', 0.001)
+            pm.setAttr('Helper_Shadow.sz', 0.001)
+        
+    def helperShadowBake(self):
+            pm.bakeResults('Helper_Shadow', simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), sampleBy = 1, oversamplingRate = 1, disableImplicitControl = True, preserveOutsideKeys = True, sparseAnimCurveBake = False, removeBakedAttributeFromLayer = False, removeBakedAnimFromLayer = False, bakeOnOverrideLayer = False, minimizeRotation  = True, controlPoints = False, shape = True)
         
         
     def animExport_2(self):
@@ -493,9 +473,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         if self.ingameExport.isChecked() == True:#motion export
             mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
             pm.select('Character_Holder')
-        elif self.camExport.isChecked() == True and self.cameraAim == False: #no aim camera export
-            mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_camCheck' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
-        elif self.camExport.isChecked() == True and self.cameraAim == True: #aim camera export
+        elif self.camExport.isChecked() == True: #aim camera export
             mel.eval('gameExp_SetUniqueAnimationClipName 0"' + self.exportName.text() + '_cam' + '"' + self.clipNameFieldpy + ';')#changing name? the 0 at the start indicates it position in the list of game clips
         mel.eval('gameExp_DoExport();') #this is the point at which it exports
         
@@ -507,6 +485,15 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #bake whip if present
         #if pm.objExists('ikJoint_Weapon2'):
         #    pm.bakeResults(pm.listRelatives('Helper_Weapon1'), time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True, sampleBy = 1, oversamplingRate = 1, disableImplicitControl = True, preserveOutsideKeys = True, sparseAnimCurveBake = False, removeBakedAttributeFromLayer = False, removeBakedAnimFromLayer = False, bakeOnOverrideLayer = False, minimizeRotation  = True, controlPoints = False, shape = True)
+        
+        #re-setting bake settings
+        mel.eval('performBakeSimulation 1;') #open bake settings
+        list = [i for i in pm.lsUI(cl = True, long = True) if 'OptionBoxWindow' in i]#list down UIs
+        list.sort(key = len)#sort list by length
+        mel.eval('bakeSimulationSetup %s animationList 1 "-1.0" "-1.0";' %list[6])#resetting bake settings
+        pm.deleteUI('OptionBoxWindow')#close bake window
+
+        
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
         
         pm.mel.mayaHIKsetRigInput("Character1")#setting back to humanIK
@@ -531,10 +518,21 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.delete(delList)
         print(str(delList) + u' を削除します')
         #delete the mesh under character Holder
-        for i in pm.listRelatives('Character_Holder'):
-            if i.find('Character') == -1:
-                print (i + u' を削除します')
-                pm.delete(i)
+        
+        if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion':
+            for i in pm.listRelatives('Character_Holder'):
+                if i.find('Character') == -1:
+                    print (i + u' を削除します')
+                    pm.delete(i)
+        
+        else:
+            for i in pm.listRelatives('Character_Holder'):
+                if i.find('Character') == -1 and i.find('Helper_Reference') == -1:
+                    print (i + u' を削除します')
+                    pm.delete(i)
+            for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type = 'transform'):
+                if not 'Helper_Shadow' in str(i):
+                    pm.delete(i)
     
     def importReference(self):
         #removing weapon references
@@ -543,10 +541,11 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 cmds.file(i, removeReference = True)
         #importing reference
         try:
-            cmds.file(cmds.file(reference = True, query = True), importReference = True)
+            for i in cmds.file(reference = True, query = True):
+                cmds.file(i, importReference = True)
         except:
             print('no references to import')
-        
+    
     
     def removeNamespace(self): #remove namespaces
         pm.namespace(setNamespace=':') #setting namespace to root
