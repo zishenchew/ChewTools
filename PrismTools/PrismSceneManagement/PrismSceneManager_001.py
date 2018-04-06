@@ -11,20 +11,21 @@
 ##############################################################################################################################
 
 import pymel.core as pm
-import maya.mel as mel
+#import maya.mel as mel
 from functools import partial
 import os
 
 
 class PrismToolsMainWindow():
     def __init__(self):
-        #self.testPath = r'//p.sv/Prism/project/SER/user/chew/ref/'
         self.testPath = r'D:/SER/SVN/MAYA/motion/maya/SER_005_n_mot/'
-        #self.x = [i for i in os.listdir(self.testPath) if os.path.isfile(os.path.join(self.testPath, i))]
-        self.mayaFolder = r'D:/SER/SVN/MAYA/motion/maya/'
-        self.motionFolders = [i for i in os.listdir(self.mayaFolder)]
-        #self.radColle =  pm.radioCollection()
-        #print self.x
+        self.mayaMotionFolder = r'D:/SER/SVN/MAYA/motion/maya/'
+        self.motionFolders = {i:self.mayaMotionFolder+i for i in os.listdir(self.mayaMotionFolder)}
+        self.mayaModelFolder = r'D:/SER/SVN/MAYA/model/'
+        self.modelFolders = {i:self.mayaModelFolder + i + '/scenes/' for i in os.listdir(self.mayaModelFolder)}
+
+        
+
         
     def uiWindow(self):
         #checking for duplicate windows
@@ -38,10 +39,15 @@ class PrismToolsMainWindow():
         
         #menu bar
         menuBar = pm.menuBarLayout()
-        motionMenu = pm.menu( label='キャラ' )
-        for i in self.motionFolders:
-            mainBody_arg = partial(self.mainBody, i)
+        motionMenu = pm.menu(label=u'モーション')
+        for i in sorted(self.motionFolders):
+            mainBody_arg = partial(self.mainBody, self.motionFolders[i])
             item = pm.menuItem(label=i, command = mainBody_arg, parent = motionMenu)
+        
+        modelMenu = pm.menu(label=u'モデル')
+        for i in sorted(self.modelFolders):
+            mainBody_arg = partial(self.mainBody, self.modelFolders[i])
+            item = pm.menuItem(label=i, command = mainBody_arg, parent = modelMenu)        
 
         
         #label
@@ -92,7 +98,8 @@ class PrismToolsMainWindow():
         except:
             print 'doesnt exist yet'
         
-        self.fileList = [i for i in os.listdir(self.mayaFolder + path) if os.path.isfile(os.path.join(self.mayaFolder + path, i))]
+        print(os.listdir(path))
+        self.fileList = [i for i in os.listdir(path) if os.path.isfile(os.path.join(path, i))]
         self.masterRow = pm.rowLayout(width = 600, nc = 5, parent = self.masterCol)
         spacerCol = pm.columnLayout(width = 25, parent = self.masterRow)
         col = pm.columnLayout(width = 600, parent = self.masterRow)
@@ -103,47 +110,44 @@ class PrismToolsMainWindow():
         for i in self.fileList:
             if '.ma' in i[-3:]:
                 row1 = pm.rowLayout( i, nc = 5, width = 450, parent = mainBox)
-                pm.image( image = str(self.mayaFolder + path + '/' + i).rstrip('.ma') + '.png', height = 100, width = 100)
+                pm.image( image = str(path + '/' + i).rstrip('.ma') + '.png', height = 100, width = 100)
                 column1 = pm.columnLayout(parent = row1)
                 
                 #writing a partial for command
                 radioButtonChange = partial(self.fillSceneName, i)
-                pm.radioButton(i, label = i, parent = column1, onCommand = radioButtonChange)
+                pm.radioButton(i, label = i, parent = column1, onCommand = radioButtonChange, annotation = path)
                 
                 radioSpacer = pm.rowLayout(nc = 2)
                 pm.text(label = '', width = 16, align = 'left', parent = radioSpacer, enable = False)
                 pm.text( 'SER export', label = 'comment コメント', width = 150, height = 20, align = 'left', parent = radioSpacer, enable = False)
-        #print self.mayaFolder + path
+        #print self.mayaMotionFolder + path
 
 
 
     def fillSceneName(self, fieldName, mayaFalse):
         pm.textField(self.sceneName, edit = True, text = fieldName)
-
-    
-    def fun(self, tex):
-        print(self.mayaFolder + self.path + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
-
-
+        
     def openFile(self, mayaFalse):
-        print(self.testPath + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
-        pm.openFile(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True), force = True)
+        #print(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
+        pm.openFile(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True), force = True)
         
         
 
     def saveFile(self, mayaFalse):
-        if pm.textField(self.sceneName, q = True, text = True) in self.fileList: #check if the text input is in the list of files in the directory
+        if pm.textField(self.sceneName, q = True, text = True) in pm.sceneName(): #check if the text input is in the list of files in the directory
             print 'overwrite and save'
             pm.saveFile() #saving before exporting
             self.saveImageCreate(False)
             self.mainBody(self.path, False)
+            pm.confirmDialog(message = u'保存しました！', title = u'Prism Scene Manager')
+            
         else:
             print 'save new file'
-            pm.saveAs(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True), type = 'mayaAscii') #saving before exporting
-            #cmds.file(save = True, type = 'mayaAscii') #saving before exporting
+            pm.saveAs(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.textField(self.sceneName, q = True, text = True), type = 'mayaAscii') #saving before exporting
+            pm.saveFile() #save?
             self.saveImageCreate(False)
-            #call mainBody once more
-            self.mainBody(self.path, False)
+            self.mainBody(self.path, False)#call mainBody once more
+            pm.confirmDialog(message = u'保存しました！', title = u'Prism Scene Manager')
 
         
     def comment(self, mayaFalse):
@@ -151,11 +155,11 @@ class PrismToolsMainWindow():
         
         
     def saveImageCreate(self, mayaFalse):
-        pm.playblast(completeFilename = str(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True)).rstrip('.ma') + '.png', format = 'image', compression = 'png', frame = [pm.currentTime()], forceOverwrite = True, viewer = False, width = 100, height = 100, showOrnaments = False, p = 100, os = True)
+        pm.playblast(completeFilename = str(pm.sceneName()).rstrip('.ma') + '.png', format = 'image', compression = 'png', frame = [pm.currentTime()], forceOverwrite = True, viewer = False, width = 100, height = 100, showOrnaments = False, p = 100, os = True)
         #self.saveFileName = cmds.file(save = True) #saving before exporting
 
     def placeHolder(self, butt = 'test'):
-        pm.confirmDialog(title = 'Prism Scene Manager', message = u'%s しました。 TEST ONLY' %butt)
-
-
-x = PrismToolsMainWindow().uiWindow()
+        pm.confirmDialog(title = 'Prism Scene Manager', message = u'まだ実装されていません。 TEST ONLY')
+        
+    def fun(self, tex):#nothing
+        print(self.mayaMotionFolder + self.path + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
