@@ -35,7 +35,7 @@ class PrismToolsMainWindow():
             pm.windowPref( 'sceneBrowser', remove=True )
         
         #creating window
-        pm.window(windowID, title = 'Prism シーン管理', widthHeight = (600,800))
+        pm.window(windowID, title = u'Prism シーン管理', widthHeight = (600,800))
         
         #menu bar
         menuBar = pm.menuBarLayout()
@@ -65,13 +65,13 @@ class PrismToolsMainWindow():
         #pm.text(label = '', width = 25, align = 'left', parent = yomikomiLayout, enable = False)
         pm.text(label = u'読み込み：', width = 85, height = 20, align = 'right', parent = yomikomiLayout)
         pm.text(label = '', width = 15, align = 'left', parent = yomikomiLayout, enable = False) #spacer
-        pm.button(label = '開く', command = self.openFile, width = 75, parent = yomikomiLayout, height = 20)
+        pm.button(label = u'開く', command = self.openFile, width = 75, parent = yomikomiLayout, height = 20)
         
         exportLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
         pm.text(label = u'保存：', width = 85, height = 20, align = 'right', parent = exportLayout)
         pm.text(label = '', width = 15, align = 'left', parent = exportLayout, enable = False) #spacer
-        pm.button(label = '保存', command = self.saveFile, width = 75, parent = exportLayout, height = 20)
-        pm.button(label = '出力', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = exportLayout, height = 20)
+        pm.button(label = u'保存', command = self.saveFile, width = 75, parent = exportLayout, height = 20)
+        pm.button(label = u'出力（仮）', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = exportLayout, height = 20)
 
         #radioLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
         #radButtonGrp = pm.radioButtonGrp(numberOfRadioButtons=3, label='Action:', labelArray3=['開く', '保存', '出力'], cw4 = [100, 75, 75, 75], cal = [1, 'center'])
@@ -119,7 +119,7 @@ class PrismToolsMainWindow():
                 
                 radioSpacer = pm.rowLayout(nc = 2)
                 pm.text(label = '', width = 16, align = 'left', parent = radioSpacer, enable = False)
-                pm.text( 'SER export', label = 'comment コメント', width = 150, height = 20, align = 'left', parent = radioSpacer, enable = False)
+                pm.text( 'SER export', label = u'comment コメント', width = 150, height = 20, align = 'left', parent = radioSpacer, enable = False)
         #print self.mayaMotionFolder + path
 
 
@@ -151,7 +151,7 @@ class PrismToolsMainWindow():
 
         
     def comment(self, mayaFalse):
-        pm.promptDialog(title = 'Prism Scene Manager', message = 'コメントを書いてください')
+        pm.promptDialog(title = 'Prism Scene Manager', message = u'コメントを書いてください')
         
         
     def saveImageCreate(self, mayaFalse):
