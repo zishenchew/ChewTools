@@ -1,17 +1,16 @@
 # encoding: utf-8
 ##############################################################################################################################
 #
-#    Prism Tools v 0.1.20180327
+#    Prism Tools v 0.1.20180406
 #    Author: Chew
 #    
 #
 #    Prism Tools
-#
+#    A scene management tool for managing SER files on SVN
 #
 ##############################################################################################################################
 
 import pymel.core as pm
-import maya.cmds as cmds
 import maya.mel as mel
 from functools import partial
 import os
@@ -39,10 +38,11 @@ class PrismToolsMainWindow():
         
         #menu bar
         menuBar = pm.menuBarLayout()
-        pm.menu( label='キャラ' )
+        motionMenu = pm.menu( label='キャラ' )
         for i in self.motionFolders:
             mainBody_arg = partial(self.mainBody, i)
-            item = pm.menuItem(label=i, command = mainBody_arg)
+            item = pm.menuItem(label=i, command = mainBody_arg, parent = motionMenu)
+
         
         #label
         self.masterCol = pm.columnLayout('master col', width = 600)
@@ -127,20 +127,20 @@ class PrismToolsMainWindow():
 
     def openFile(self, mayaFalse):
         print(self.testPath + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
-        cmds.file(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True), open = True, force = True)
+        pm.openFile(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True), force = True)
         
         
 
     def saveFile(self, mayaFalse):
         if pm.textField(self.sceneName, q = True, text = True) in self.fileList: #check if the text input is in the list of files in the directory
             print 'overwrite and save'
-            cmds.file(save = True) #saving before exporting
+            pm.saveFile() #saving before exporting
             self.saveImageCreate(False)
             self.mainBody(self.path, False)
         else:
             print 'save new file'
-            cmds.file(rename = self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True)) #saving before exporting
-            cmds.file(save = True, type = 'mayaAscii') #saving before exporting
+            pm.saveAs(self.mayaFolder + self.path + '/' + pm.textField(self.sceneName, q = True, text = True), type = 'mayaAscii') #saving before exporting
+            #cmds.file(save = True, type = 'mayaAscii') #saving before exporting
             self.saveImageCreate(False)
             #call mainBody once more
             self.mainBody(self.path, False)
