@@ -25,13 +25,13 @@ import maya.OpenMayaAnim as animAPI
 
 import Exporter_001Test
 import whipMake_001
-import AnimPose_001
+import AnimPose_001_test
 import constraintSwitch
 import ishiiCheck
 
 reload(Exporter_001Test)#reloading
 reload(whipMake_001)
-reload(AnimPose_001)
+reload(AnimPose_001_test)
 reload(constraintSwitch)
 reload(ishiiCheck)
 
@@ -44,7 +44,7 @@ def SERTools_Window():
         pm.windowPref( 'localGlobalWindow', remove=True )
     
     #creating window
-    pm.window(windowID, title = 'SER Tools 1.0 | 2018/03/023', widthHeight = (460,200))
+    pm.window(windowID, title = 'SER Tools 1.0 | 2018/03/023 | DEVELOPMENT VERSION', widthHeight = (460,200))
     col = pm.columnLayout( 'columnLayout01', width = 400)
     commonToolsFrame = pm.frameLayout(label = u'共通ツールス', labelIndent = 5, marginHeight = 5, parent = col, nch = 5)
     pm.rowLayout( 'row1', nc = 5, width = 450)
@@ -54,7 +54,7 @@ def SERTools_Window():
     #buttons for 2nd row
     modelFrame = pm.frameLayout(label = u'モデルツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)
     pm.rowLayout( 'row2', nc = 5, width = 450)
-    pm.button( 'SER pose', label = u'SER ポーズテスト', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row2', command = 'poseTest = SERTools_001_Test.AnimPose_001.poseTest()')
+    pm.button( 'SER pose', label = u'SER ポーズテスト', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row2', command = 'poseTest = SERTools_001_Test.AnimPose_001_test.poseTest()')
     
     animFrame = pm.frameLayout(label = u'モーションツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)
     pm.rowLayout( 'row3', nc = 5, width = 450)

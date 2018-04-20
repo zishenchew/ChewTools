@@ -44,7 +44,10 @@ def bakeLoc():
         loc = pm.ls('HelperLocator')[0]
     #handling the locator
     pm.bakeResults(loc, simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()) ) #baking the locator
-    pm.delete(pm.listRelatives(loc, type = 'constraint')[0])#removing the constraint of the locator
+    try:
+        pm.delete(pm.listRelatives(loc, type = 'constraint')[0])#removing the constraint of the locator
+    except:
+        print 'no constraints to delete'
     
     pm.mel.eval('HIKCharacterControlsTool') #command to open humanIK
     pm.mel.hikSetCurrentCharacter("Character1") #selecting character

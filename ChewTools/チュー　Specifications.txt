@@ -1,0 +1,51 @@
+FBX Export Tool
+Å®How it will benefit company:
+
+
+Å®What improvements to be made:
+á@Clean up the code. 
+The code was written at a time where the specifications were not entirely clear and specifications were added one by one as time went on.
+As a result, the code seems very patchwork and not very conducive for future maintenance and improvements.
+
+
+áAUpload it onto \\p.sv\Tool\PrismTools\
+I intend to create a central tool repository from which all tools made from Prism can be accessed. 
+The intention is to have a bunch of common tools that can be used across all projects.
+If any project-specific modularity, it should be able to be tweaked via a separate text file, or at very worst minor modifications by the tech artist.
+Hopefully, the format should be easy enough to be tweaked by either the lead or the PM.
+
+
+
+Scene Management Tool
+Å®How it will benefit company:
+Having scene browser eliminates the tediousness of clicking through many folders when needing to search for the 
+appropriate folder to find files or anything.
+As well, having a simple and direct way of browsing files will eliminate human error when uploading or pushing files
+through to GIT, SVN or server.
+
+Å®What improvements to be made / things still needed to be done:
+á@Implement the rest of the intended features.
+Currently, the browser is at a very rudimentary stage. The general idea is the same as the EKKO scene browser that is 
+being used on EKKO. However, I intend to add more features as well, and intend it to be more customisable. 
+On top of that, I intend this to be part of the common tools be deployed across all projects simultaenously, by having 
+all the paths and stuff editable via a text file located on the server.
+
+
+
+Rigging solution
+Å®How it will benefit company:
+Create a standardised rig to be used if the rigging solution is not decided by client company. 
+Personally, I find that HumanIK is inadequete as a rigging tool as it was meant mostly motion capture and not designed 
+to be used for hand-key exclusively. One of the biggest problems faced was the constant crashing whenever complex 
+weapons had to be rigged and animated, as well as intermittent crashing out of the blue. On top of that, a lot of 
+round-about situations had to be developed to deal with simple things like switching weapon holding hands, etc.
+
+
+Å®What is to be done:
+á@Either explore Advanced Skeleton as a rigging solution, or I can write a new rigging tool.
+I heard from Jin-san and Otsuka-san  that Advanced Skeleton was used before. We could either use that and establish a 
+set pipeline or I could amend a tool that I have already written for that purpose.
+
+
+
+More tools are thought of, but there are already exisitings tools that we have to deal with them.

@@ -78,7 +78,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.fileType = 'chain'
             self.charaNumber = '0'
             self.weaponNumber = '0'
-        elif self.fileNameSplit[0] == '00' and self.fileNameSplit[1] == 'CutScene' and self.fileNameSplit[2] == 'Chain':
+        elif len(self.fileNameSplit[0]) == 2 and self.fileNameSplit[1] == 'CutScene' and self.fileNameSplit[2] == 'Chain':
             self.fileType = 'chain'
             self.charaNumber = '0'
             self.weaponNumber = '0'
