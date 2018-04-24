@@ -19,6 +19,7 @@ import maya.cmds as cmds
 import maya.mel as mel
 #import maya.OpenMayaUI as apiUI
 import maya.OpenMayaAnim as animAPI
+from shutil import copy2 #for copy pasta into GIT
 import os
 import sys
 sys.path.append('//p.sv/Prism/project/SER/user/chew/SERTools')#adding new directory for tools to import
@@ -32,6 +33,7 @@ import shiboken2
 import ExporterUI_002 #this is the UI file
 reload(ExporterUI_002)
 from ExporterUI_002 import Ui_MainWindow
+
 
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = shiboken2.wrapInstance(long(mayaMainWindowPtr), QtWidgets.QWidget) 
@@ -234,8 +236,12 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'chain':
             if self.fuji == 1:
                 self.exportPathText = r'D:/SER/SER_SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/' + self.weaponIndex[self.weaponNumber]
+                if self.weaponNumber == '00':
+                    self.exportPathText = r'D:/SER/SER_SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
             else:
                 self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/' + self.weaponIndex[self.weaponNumber]
+                if self.weaponNumber == '00':
+                    self.exportPathText = r'D:/SER/SER_SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
         elif self.fileType == 'kyojinIntro':
             self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/%s/Motions/Resonize' %self.fileNameSplit[0]
         elif self.fileType == 'kyojinCommonStep':
@@ -421,6 +427,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             
         except:
             pass
+        copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
+        print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
         pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
         print('SER Export complete!')
         
