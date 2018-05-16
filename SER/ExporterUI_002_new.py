@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'E:/ChewTools/SER/ChewToolsExporter/ExporterUI_002.ui'
+# Form implementation generated from reading ui file 'D:/ChewTools/SER/ExporterUI_002.ui'
 #
-# Created: Wed May 16 14:32:21 2018
+# Created: Wed May 16 13:43:29 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,7 +38,7 @@ class Ui_MainWindow(object):
         self.ingameButton1.setChecked(True)
         self.ingameButton1.setObjectName("ingameButton1")
         self.ingameButton2 = QtWidgets.QRadioButton(self.MotionTab)
-        self.ingameButton2.setGeometry(QtCore.QRect(450, 140, 110, 16))
+        self.ingameButton2.setGeometry(QtCore.QRect(260, 140, 110, 16))
         self.ingameButton2.setObjectName("ingameButton2")
         self.weapNameDisplay = QtWidgets.QLabel(self.MotionTab)
         self.weapNameDisplay.setGeometry(QtCore.QRect(40, 50, 41, 20))
@@ -56,9 +56,10 @@ class Ui_MainWindow(object):
         self.weapNameInput = QtWidgets.QLineEdit(self.MotionTab)
         self.weapNameInput.setGeometry(QtCore.QRect(90, 50, 241, 21))
         self.weapNameInput.setObjectName("weapNameInput")
-        self.ingameButton3 = QtWidgets.QRadioButton(self.MotionTab)
-        self.ingameButton3.setGeometry(QtCore.QRect(260, 140, 151, 16))
-        self.ingameButton3.setObjectName("ingameButton3")
+        self.helperShadowBox = QtWidgets.QCheckBox(self.MotionTab)
+        self.helperShadowBox.setGeometry(QtCore.QRect(380, 140, 181, 16))
+        self.helperShadowBox.setChecked(True)
+        self.helperShadowBox.setObjectName("helperShadowBox")
         self.ExporterTab.addTab(self.MotionTab, "")
         self.ModelTab = QtWidgets.QWidget()
         self.ModelTab.setObjectName("ModelTab")
@@ -91,10 +92,10 @@ class Ui_MainWindow(object):
         self.exportBox.setText(QtWidgets.QApplication.translate("MainWindow", "出力パス", None, -1))
         self.animExportButton.setText(QtWidgets.QApplication.translate("MainWindow", "出力", None, -1))
         self.charaNameDisplay.setText(QtWidgets.QApplication.translate("MainWindow", "キャラ名", None, -1))
-        self.ingameButton1.setText(QtWidgets.QApplication.translate("MainWindow", "インモーション", None, -1))
+        self.ingameButton1.setText(QtWidgets.QApplication.translate("MainWindow", "モーション", None, -1))
         self.ingameButton2.setText(QtWidgets.QApplication.translate("MainWindow", "カメラ", None, -1))
         self.weapNameDisplay.setText(QtWidgets.QApplication.translate("MainWindow", "武器名", None, -1))
-        self.ingameButton3.setText(QtWidgets.QApplication.translate("MainWindow", "カットシーンモーション（仮）", None, -1))
+        self.helperShadowBox.setText(QtWidgets.QApplication.translate("MainWindow", "Helper_Shadow 0.001 設定", None, -1))
         self.ExporterTab.setTabText(self.ExporterTab.indexOf(self.MotionTab), QtWidgets.QApplication.translate("MainWindow", "モーション出力", None, -1))
         self.charaNameDisplay_2.setText(QtWidgets.QApplication.translate("MainWindow", "キャラ名", None, -1))
         self.exportBox_2.setText(QtWidgets.QApplication.translate("MainWindow", "出力パス", None, -1))

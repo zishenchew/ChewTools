@@ -30,9 +30,9 @@ from PySide2.QtCore import *  #either this or the other
 
 from PySide2 import QtUiTools
 import shiboken2
-import ExporterUI_002 #this is the UI file
-reload(ExporterUI_002)
-from ExporterUI_002 import Ui_MainWindow
+import ExporterUI_002_new #this is the UI file
+reload(ExporterUI_002_new)
+from ExporterUI_002_new import Ui_MainWindow
 
 
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
@@ -63,8 +63,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #radio buttons
         self.ingameExport = self.ingameButton1 #ingame
         self.camExport = self.ingameButton2 #camera
-        self.cutsceneExport = self.ingameButton3 #cutscene motion
-        
+        #self.cutsceneExport = self.ingameButton3 #cutscene motion DELETE LATER
         
         
         if self.fileNameSplit[0] == 'SER': #charaModel
@@ -314,7 +313,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_01_intro/' + self.fileNameSplit[0])
             elif self.fileType == 'kyojinCommonFinish' and self.fileNameSplit[1] == 'ResonizeFinish': #resonize finish
                 self.exportPath.setText(r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/CutScenes/CutScene_Resonize_04_finish')
-    
     #_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
     #
     #functions start
@@ -408,7 +406,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
 
     def animExpButton(self):
         #combined export button
-        self.saveFileName = cmds.file(save = True) #saving before exporting
+        self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving as a backup before exporting
         if self.ingameExport.isChecked() == True:#motion export
             
             self.animExport_1()
@@ -417,18 +415,32 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.camExport.isChecked() == True: #camera export
             self.cameraExport()
             
+        '''                                                                                    DELETE LATER
         elif self.cutsceneExport.isChecked() == True:
            #self.cutSceneExport()
            pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented /nまだ書いていません')
            pass
-        cmds.file(self.saveFileName, open = True, force = True)
+        '''
+        
+        pm.openFile(self.saveFileName, force = True) #opening original file
+        pm.renameFile(pm.sceneName()[:-8]) #renames the file back to the original name before it was 
         try: #spamming delete entry in case there are entries before already
             mel.eval('gameExp_DeleteAnimationClipLayout 0;')
-            
         except:
             pass
-        copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
-        print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
+        for i in pm.lsUI(windows = True):#closing the game exporter window
+            if 'gameExporterWindow' in i:
+                pm.deleteUI(i)
+        '''
+        #copy pasta part
+        if self.camExport.isChecked() == True: #camera export
+            copy2(self.exportPath.text() + r'/' + self.exportName.text() + '_cam.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
+            print self.exportPath.text() + r'/' + self.exportName.text() + '_cam.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
+        else:
+            copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
+            print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
+        '''
+        
         pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
         print('SER Export complete!')
         
@@ -453,15 +465,17 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     def helperShadowSetup(self):
         if self.ingame == False:
             pm.parentConstraint('Character_Hips', 'Helper_Shadow', st = 'y', sr = ['x', 'y', 'z'])
-            pm.setAttr('Helper_Shadow.sx', 0.001)
-            pm.setAttr('Helper_Shadow.sy', 0.001)
-            pm.setAttr('Helper_Shadow.sz', 0.001)
+            if self.helperShadowBox.isChecked() == True:
+                pm.setAttr('Helper_Shadow.sx', 0.001)
+                pm.setAttr('Helper_Shadow.sy', 0.001)
+                pm.setAttr('Helper_Shadow.sz', 0.001)
         
     def helperShadowBake(self):
             pm.bakeResults('Helper_Shadow', simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), sampleBy = 1, oversamplingRate = 1, disableImplicitControl = True, preserveOutsideKeys = True, sparseAnimCurveBake = False, removeBakedAttributeFromLayer = False, removeBakedAnimFromLayer = False, bakeOnOverrideLayer = False, minimizeRotation  = True, controlPoints = False, shape = True)
         
         
     def animExport_2(self):
+        
         
         mel.eval('source gameFbxExporter;gameFbxExporter();')#opening game exporter
         pm.tabLayout('gameExporterTabLayout', st = 'gameExporterAnimationTab', edit = True) #switches over to the animation tab
@@ -537,15 +551,17 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         print(str(delList) + u' を削除します')
         #delete the mesh under character Holder
         
-        if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion':
-            for i in pm.listRelatives('Character_Holder'):
-                if i.find('Character') == -1:
+        if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or self.fileNameSplit[1] == 'ResonizeIdle':  #this part lists the cases where Helper_Shadow is deleted
+            print 'Ingame motion, deleting Helper_Shadow'
+            for i in pm.listRelatives('Character_Holder', type = 'transform'):
+                if i.find('Character_Reference') == -1:
                     print (i + u' を削除します')
                     pm.delete(i)
         
-        else:
-            for i in pm.listRelatives('Character_Holder'):
-                if i.find('Character') == -1 and i.find('Helper_Reference') == -1:
+        else: #this part lists the cases where Helper_Shadow is preserved
+            print 'Not ingame motion, not deleting shadow helper'
+            for i in pm.listRelatives('Character_Holder', type = 'transform'):
+                if i.find('Character_Reference') == -1 and i.find('Helper_Reference') == -1:
                     print (i + u' を削除します')
                     pm.delete(i)
             for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type = 'transform'):
@@ -590,7 +606,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         print('SER Export complete!')
         
     def modelExport_1(self):
-        self.saveFileName = cmds.file(save = True) #saving before exporting
+        self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving before exporting
         #delete everything except mesh
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
         
@@ -608,7 +624,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #print('modelExport_1')
         
     def modelExport_2(self):
+        #exporting
         cmds.file(self.exportPathInput_2.text() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
-        #re-open the save file
-        cmds.file(self.saveFileName, open = True, force = True)
+        pm.openFile(self.saveFileName, force = True)#re-open the save file
         #print('modelExport_2')
