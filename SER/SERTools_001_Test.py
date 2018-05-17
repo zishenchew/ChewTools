@@ -28,12 +28,14 @@ import whipMake_001
 import AnimPose_001_test
 import constraintSwitch
 import ishiiCheck
+import Weapon_Rig
 
 reload(Exporter_001Test)#reloading
 reload(whipMake_001)
 reload(AnimPose_001_test)
 reload(constraintSwitch)
 reload(ishiiCheck)
+reload(Weapon_Rig)
 
 #window code
 def SERTools_Window():
@@ -44,7 +46,7 @@ def SERTools_Window():
         pm.windowPref( 'localGlobalWindow', remove=True )
     
     #creating window
-    pm.window(windowID, title = 'SER Tools 1.0 | 2018/03/023 | DEVELOPMENT VERSION', widthHeight = (460,200))
+    pm.window(windowID, title = 'SER Tools 1.0 | 2018/05/017 | DEVELOPMENT VERSION', widthHeight = (460,200))
     col = pm.columnLayout( 'columnLayout01', width = 400)
     commonToolsFrame = pm.frameLayout(label = u'共通ツールス', labelIndent = 5, marginHeight = 5, parent = col, nch = 5)
     pm.rowLayout( 'row1', nc = 5, width = 450)
@@ -61,6 +63,8 @@ def SERTools_Window():
     pm.button( 'SER whipmake', label = u'SER 鞭リッグ作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'whip = SERTools_001_Test.whipMake_001.whipMake()')
     pm.button( 'SER constraint', label = u'SER コンすトレイン', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001_Test.constraintSwitch.scriptUI()')
     pm.button( 'SER ishiiCheck', label = u'SER 石井チェック', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001_Test.ishiiCheck.ishiiCheckFunc()')
+    pm.rowLayout( 'row4', nc = 5, width = 450, parent = animFrame)
+    pm.button( 'SER WeaponRig', label = u'SER 武器リグ', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row4', command = Weapon_Rig.rigUI)
     #pm.button( 'Wrist gbl to loc', label = 'Remove: Left hand Global controller', width = 200, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'wristTranslateControllers', command = 'ChewTools.GlobalLocalSwitch2.L_global_to_local()')
     '''
     pm.rowLayout('L_Hand_to_Weapon_Row', nc = 2, parent = 'columnLayout01' )
@@ -82,4 +86,4 @@ def SERTools_Window():
     pm.button( 'mocap Transfer', label = 'Mocap Copy', width = 100, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'mocapTransfer2', command = 'ChewTools.mocapButton()' )
     '''
     pm.showWindow()
-    pm.window(windowID, edit = True, widthHeight = (455,180))
+    pm.window(windowID, edit = True, widthHeight = (455,200))

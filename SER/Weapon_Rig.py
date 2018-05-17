@@ -109,7 +109,7 @@ def helperBake(mayaFalse): #deprecated
     pm.deleteUI('OptionBoxWindow')
 
 
-def rigUI():
+def rigUI(mayaFalse):
     windowID = 'weaponRig'#checking if window already exists
     if pm.window(windowID, exists = True):
         pm.deleteUI(windowID)

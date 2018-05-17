@@ -406,7 +406,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
 
     def animExpButton(self):
         #combined export button
-        self.saveFileName = cmds.file(save = True) #saving before exporting
+        self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving as a backup before exporting
         if self.ingameExport.isChecked() == True:#motion export
             
             self.animExport_1()
@@ -415,14 +415,11 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.camExport.isChecked() == True: #camera export
             self.cameraExport()
             
-        '''                                                                                    DELETE LATER
-        elif self.cutsceneExport.isChecked() == True:
-           #self.cutSceneExport()
-           pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented /nまだ書いていません')
-           pass
-        '''
         
-        cmds.file(self.saveFileName, open = True, force = True)
+        pm.openFile(self.saveFileName, force = True) #opening original file
+        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+        os.remove(self.saveFileName)
+        
         try: #spamming delete entry in case there are entries before already
             mel.eval('gameExp_DeleteAnimationClipLayout 0;')
         except:
@@ -438,6 +435,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         else:
             copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
             print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
+        
         
         pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
         print('SER Export complete!')
@@ -604,7 +602,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         print('SER Export complete!')
         
     def modelExport_1(self):
-        self.saveFileName = cmds.file(save = True) #saving before exporting
+        self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving before exporting
         #delete everything except mesh
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
         
@@ -622,7 +620,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #print('modelExport_1')
         
     def modelExport_2(self):
+        #exporting
         cmds.file(self.exportPathInput_2.text() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
-        #re-open the save file
-        cmds.file(self.saveFileName, open = True, force = True)
+        pm.openFile(self.saveFileName, force = True)#re-open the save file
+        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+        os.remove(self.saveFileName)
         #print('modelExport_2')

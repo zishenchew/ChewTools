@@ -423,7 +423,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         '''
         
         pm.openFile(self.saveFileName, force = True) #opening original file
-        pm.renameFile(pm.sceneName()[:-8]) #renames the file back to the original name before it was 
+        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+        os.remove(self.saveFileName)
+        
         try: #spamming delete entry in case there are entries before already
             mel.eval('gameExp_DeleteAnimationClipLayout 0;')
         except:
@@ -448,10 +450,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     def animExport_1(self):
         
         #perform all the requisite checks and tasks before exporting
+        self.bakeHIK()
         self.importReference()
         self.removeNamespace()
         self.helperShadowSetup()
-        self.bakeHIK()
         self.helperShadowBake()
         self.deleteNonHIK()
         
@@ -462,16 +464,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             print (u'パスは存在していないので、作ります')
             os.makedirs(self.exportPath.text())
             
-    def helperShadowSetup(self):
-        if self.ingame == False:
-            pm.parentConstraint('Character_Hips', 'Helper_Shadow', st = 'y', sr = ['x', 'y', 'z'])
-            if self.helperShadowBox.isChecked() == True:
-                pm.setAttr('Helper_Shadow.sx', 0.001)
-                pm.setAttr('Helper_Shadow.sy', 0.001)
-                pm.setAttr('Helper_Shadow.sz', 0.001)
-        
-    def helperShadowBake(self):
-            pm.bakeResults('Helper_Shadow', simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), sampleBy = 1, oversamplingRate = 1, disableImplicitControl = True, preserveOutsideKeys = True, sparseAnimCurveBake = False, removeBakedAttributeFromLayer = False, removeBakedAnimFromLayer = False, bakeOnOverrideLayer = False, minimizeRotation  = True, controlPoints = False, shape = True)
         
         
     def animExport_2(self):
@@ -511,7 +503,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         mel.eval('gameExp_DeleteAnimationClipLayout 0;') # delete clip afterward
         #end of export
-        
+    
     
     def bakeHIK(self):
         #bake whip if present
@@ -524,7 +516,13 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         list.sort(key = len)#sort list by length
         mel.eval('bakeSimulationSetup %s animationList 1 "-1.0" "-1.0";' %list[6])#resetting bake settings
         pm.deleteUI('OptionBoxWindow')#close bake window
-
+        
+        #this part bakes the weapon and helperweapon
+        if pm.ls('Controller_Weapon_Global'):
+            pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            helperToWeapon = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
+            pm.bakeResults(pm.ls('*Helper_Weapon1')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            pm.delete(helperToWeapon)
         
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
         
@@ -538,6 +536,53 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         pm.mel.hikBakeCharacter(0) #this is the bake to skeleton command
         #pm.mel.hikBakeToControlRig(0)
+    
+    
+    '''
+    def bakeWeaponJoint(self):
+        pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+    '''
+    
+    def importReference(self):
+        #removing weapon references
+        for i in cmds.file(reference = True, query = True, shortName = True):
+            if i[:3] != 'SER':
+                cmds.file(i, removeReference = True)
+        #importing reference
+        try:
+            for i in cmds.file(reference = True, query = True):
+                cmds.file(i, importReference = True)
+        except:
+            print('no references to import')
+    
+    
+    def removeNamespace(self): #remove namespaces
+        pm.namespace(setNamespace=':') #setting namespace to root
+        namespaces = pm.namespaceInfo(listOnlyNamespaces = True, recurse = True)
+        namespaceLooper = 0
+        for i in namespaces: #this for loop checks for all the namespaces
+            if i != 'shared' and i != 'UI':
+                namespaceLooper +=1 #this keeps track of the number of namespaces to delete
+        while namespaceLooper >0: #this while loop will keep running for as long as there are namespaces that are not root to delete
+            namespaces = pm.namespaceInfo(listOnlyNamespaces = True)
+            for i in namespaces:
+                if i != 'shared' and i != 'UI':
+                    pm.namespace(mergeNamespaceWithRoot = True, removeNamespace = i)
+                    namespaceLooper -= 1 #this will decrement the namespace count so the loop will be able to break out
+    
+    
+    def helperShadowSetup(self):
+        if self.ingame == False:
+            pm.parentConstraint('Character_Hips', 'Helper_Shadow', st = 'y', sr = ['x', 'y', 'z'])
+            if self.helperShadowBox.isChecked() == True:
+                pm.setAttr('Helper_Shadow.sx', 0.001)
+                pm.setAttr('Helper_Shadow.sy', 0.001)
+                pm.setAttr('Helper_Shadow.sz', 0.001)
+    
+    
+    def helperShadowBake(self):
+            pm.bakeResults('Helper_Shadow', simulation = True, time = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), sampleBy = 1, oversamplingRate = 1, disableImplicitControl = True, preserveOutsideKeys = True, sparseAnimCurveBake = False, removeBakedAttributeFromLayer = False, removeBakedAnimFromLayer = False, bakeOnOverrideLayer = False, minimizeRotation  = True, controlPoints = False, shape = True)
+        
         
     def deleteNonHIK(self):
         
@@ -568,32 +613,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
                 if not 'Helper_Shadow' in str(i):
                     pm.delete(i)
     
-    def importReference(self):
-        #removing weapon references
-        for i in cmds.file(reference = True, query = True, shortName = True):
-            if i[:3] != 'SER':
-                cmds.file(i, removeReference = True)
-        #importing reference
-        try:
-            for i in cmds.file(reference = True, query = True):
-                cmds.file(i, importReference = True)
-        except:
-            print('no references to import')
-    
-    
-    def removeNamespace(self): #remove namespaces
-        pm.namespace(setNamespace=':') #setting namespace to root
-        namespaces = pm.namespaceInfo(listOnlyNamespaces = True, recurse = True)
-        namespaceLooper = 0
-        for i in namespaces: #this for loop checks for all the namespaces
-            if i != 'shared' and i != 'UI':
-                namespaceLooper +=1 #this keeps track of the number of namespaces to delete
-        while namespaceLooper >0: #this while loop will keep running for as long as there are namespaces that are not root to delete
-            namespaces = pm.namespaceInfo(listOnlyNamespaces = True)
-            for i in namespaces:
-                if i != 'shared' and i != 'UI':
-                    pm.namespace(mergeNamespaceWithRoot = True, removeNamespace = i)
-                    namespaceLooper -= 1 #this will decrement the namespace count so the loop will be able to break out
     
     def modelExport(self):
         #create folder if it doesn't exist
@@ -627,4 +646,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         #exporting
         cmds.file(self.exportPathInput_2.text() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
         pm.openFile(self.saveFileName, force = True)#re-open the save file
+        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+        os.remove(self.saveFileName)
         #print('modelExport_2')
