@@ -29,6 +29,7 @@ import AnimPose_001_test
 import constraintSwitch
 import ishiiCheck
 import Weapon_Rig
+import PrismSceneManager_001a
 
 reload(Exporter_001Test)#reloading
 reload(whipMake_001)
@@ -36,6 +37,7 @@ reload(AnimPose_001_test)
 reload(constraintSwitch)
 reload(ishiiCheck)
 reload(Weapon_Rig)
+reload(PrismSceneManager_001a)
 
 #window code
 def SERTools_Window():
@@ -52,6 +54,7 @@ def SERTools_Window():
     pm.rowLayout( 'row1', nc = 5, width = 450)
     #buttons for first row
     pm.button( 'SER export', label = u'SER 出力 Test', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'export = SERTools_001_Test.Exporter_001Test.main()')
+    pm.button( 'SER manager', label = u'SER シーン管理', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row1', command = 'sceneBrowser = SERTools_001_Test.PrismSceneManager_001a.PrismToolsMainWindow().uiWindow()')
     
     #buttons for 2nd row
     modelFrame = pm.frameLayout(label = u'モデルツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)

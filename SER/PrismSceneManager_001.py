@@ -23,9 +23,8 @@ class PrismToolsMainWindow():
         self.motionFolders = {i:self.mayaMotionFolder+i for i in os.listdir(self.mayaMotionFolder)}
         self.mayaModelFolder = r'D:/SER/SVN/MAYA/model/'
         self.modelFolders = {i:self.mayaModelFolder + i + '/scenes/' for i in os.listdir(self.mayaModelFolder)}
-
         
-
+        
         
     def uiWindow(self):
         #checking for duplicate windows
@@ -58,7 +57,8 @@ class PrismToolsMainWindow():
         sceneNameLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
         pm.text(label = u'シーン名：', width = 85, align = 'right')
         pm.text(label = '', width = 15, align = 'left', parent = sceneNameLayout, enable = False) #spacer
-        self.sceneName = pm.textField(width = 400)
+        self.sceneName = pm.textField(width = 410)
+        pm.button(label = u'開', command = self.folderOpen, width = 25, parent = sceneNameLayout, height = 20)
         
         #button
         yomikomiLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
@@ -66,6 +66,9 @@ class PrismToolsMainWindow():
         pm.text(label = u'読み込み：', width = 85, height = 20, align = 'right', parent = yomikomiLayout)
         pm.text(label = '', width = 15, align = 'left', parent = yomikomiLayout, enable = False) #spacer
         pm.button(label = u'開く', command = self.openFile, width = 75, parent = yomikomiLayout, height = 20)
+        pm.button(label = u'レファレンス', command = self.referenceButton, width = 75, parent = yomikomiLayout, height = 20)
+        pm.text(label = '', width = 5, align = 'left', parent = yomikomiLayout, enable = False) #spacer
+        self.refNamespace = pm.textField(placeholderText = u'ネームスペース', width = 100)
         
         exportLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
         pm.text(label = u'保存：', width = 85, height = 20, align = 'right', parent = exportLayout)
@@ -73,15 +76,6 @@ class PrismToolsMainWindow():
         pm.button(label = u'保存', command = self.saveFile, width = 75, parent = exportLayout, height = 20)
         pm.button(label = u'出力（仮）', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = exportLayout, height = 20)
 
-        #radioLayout = pm.rowLayout(parent = self.masterCol, nc = 10)
-        #radButtonGrp = pm.radioButtonGrp(numberOfRadioButtons=3, label='Action:', labelArray3=['開く', '保存', '出力'], cw4 = [100, 75, 75, 75], cal = [1, 'center'])
-        #pm.button(label = '実行', command = self.openFile, width = 100, parent = radioLayout)
-        
-        
-        #buttonLayout = pm.rowLayout(parent = self.masterCol, nc = 5)
-        #pm.button(label = '開く', command = self.openFile, width = 75, parent = buttonLayout)
-        #pm.button(label = '保存 create image', command = self.saveImageCreate, width = 75, parent = buttonLayout)
-        #pm.button(label = '出力', command = lambda x: self.placeHolder(u'出力'), width = 75, parent = buttonLayout)
 
 
         spacerLayout = pm.rowLayout(parent = self.masterCol, nc = 5)
@@ -123,6 +117,11 @@ class PrismToolsMainWindow():
         #print self.mayaMotionFolder + path
 
 
+    def folderOpen(self, mayaFalse):
+        try:
+            os.startfile(self.path) #opening folder in explorer
+        except:
+            pm.confirmDialog(title = u'SER シーン管理', message = u'フォルダーを選択してください。')
 
     def fillSceneName(self, fieldName, mayaFalse):
         pm.textField(self.sceneName, edit = True, text = fieldName)
@@ -134,20 +133,21 @@ class PrismToolsMainWindow():
         
 
     def saveFile(self, mayaFalse):
-        if pm.textField(self.sceneName, q = True, text = True) in pm.sceneName(): #check if the text input is in the list of files in the directory
-            print 'overwrite and save'
-            pm.saveFile() #saving before exporting
-            self.saveImageCreate(False)
-            self.mainBody(self.path, False)
-            pm.confirmDialog(message = u'保存しました！', title = u'Prism Scene Manager')
-            
-        else:
-            print 'save new file'
-            pm.saveAs(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.textField(self.sceneName, q = True, text = True), type = 'mayaAscii') #saving before exporting
-            pm.saveFile() #save?
-            self.saveImageCreate(False)
-            self.mainBody(self.path, False)#call mainBody once more
-            pm.confirmDialog(message = u'保存しました！', title = u'Prism Scene Manager')
+        if pm.confirmDialog(title = u'SER シーン管理', message = u'上書きしますか?', button = [u'はい',u'いいえ'], defaultButton = u'はい', cancelButton = u'いいえ', dismissString = u'いいえ'):
+            if pm.textField(self.sceneName, q = True, text = True) in pm.sceneName(): #check if the text field option is the same as the current scene file 
+                print 'overwrite and save'
+                pm.saveFile() #saving before exporting
+                self.saveImageCreate(False)
+                self.mainBody(self.path, False)
+                pm.confirmDialog(message = u'保存しました！', title = u'Prism Scene Manager')
+                
+            else: 
+                print 'save new file'
+                pm.saveAs(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.textField(self.sceneName, q = True, text = True), type = 'mayaAscii') #saving before exporting
+                pm.saveFile() #save?
+                self.saveImageCreate(False)
+                self.mainBody(self.path, False)#call mainBody once more
+                pm.confirmDialog(message = u'保存しました！', title = u'Prism Scene Manager')
 
         
     def comment(self, mayaFalse):
@@ -163,3 +163,13 @@ class PrismToolsMainWindow():
         
     def fun(self, tex):#nothing
         print(self.mayaMotionFolder + self.path + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
+        
+    def referenceButton(self, mayaFalse):
+        if not pm.textField(self.sceneName, q = True, text = True):
+            pm.confirmDialog(title = u'SER シーン管理', message = u'シーンを選択してください。')
+        
+        else:
+            if pm.textField(self.refNamespace, q = True, text = True):#if namespace is present
+                pm.createReference(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True), namespace = pm.textField(self.refNamespace, q = True, text = True))
+            else:
+                pm.createReference(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))

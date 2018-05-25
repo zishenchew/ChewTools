@@ -325,6 +325,12 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             print (u'パスは存在していないので、作ります')
             os.makedirs(self.exportPath.text())
         
+        if pm.ls('cameraShape*'):#setting keyframe on focal length at frame 0
+            camShape = pm.ls('cameraShape*')[0]
+            if not pm.keyframe(camShape, q = True, at = 'focalLength', t = 0):
+                print 'setting keyframe on frame 0'
+                pm.setKeyframe(camShape, at = 'focalLength', t = 0)
+        
         if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
             print('no aim')
             #export the camera right away
@@ -415,12 +421,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.camExport.isChecked() == True: #camera export
             self.cameraExport()
             
-        '''                                                                                    DELETE LATER
-        elif self.cutsceneExport.isChecked() == True:
-           #self.cutSceneExport()
-           pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented /nまだ書いていません')
-           pass
-        '''
         
         pm.openFile(self.saveFileName, force = True) #opening original file
         pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
@@ -445,6 +445,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
         print('SER Export complete!')
+        pm.openFile(self.saveFileName, force = True)#re-open the save file
+        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+        os.remove(self.saveFileName)
+        
         
         
     def animExport_1(self):
@@ -453,8 +457,11 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         self.bakeHIK()
         self.importReference()
         self.removeNamespace()
-        self.helperShadowSetup()
-        self.helperShadowBake()
+        if  self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or self.fileNameSplit[1] == 'ResonizeIdle': 
+            pass
+        else:
+            self.helperShadowSetup()
+            self.helperShadowBake()
         self.deleteNonHIK()
         
         #print(fail)
@@ -517,12 +524,6 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         mel.eval('bakeSimulationSetup %s animationList 1 "-1.0" "-1.0";' %list[6])#resetting bake settings
         pm.deleteUI('OptionBoxWindow')#close bake window
         
-        #this part bakes the weapon and helperweapon
-        if pm.ls('Controller_Weapon_Global'):
-            pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
-            helperToWeapon = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
-            pm.bakeResults(pm.ls('*Helper_Weapon1')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
-            pm.delete(helperToWeapon)
         
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
         
@@ -536,12 +537,21 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         pm.mel.hikBakeCharacter(0) #this is the bake to skeleton command
         #pm.mel.hikBakeToControlRig(0)
-    
-    
-    '''
-    def bakeWeaponJoint(self):
-        pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
-    '''
+        
+        
+        #this part bakes the weapon and helperweapon
+        if pm.ls('Controller_Weapon_Global'):#for single handed weapons
+            pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            helperToWeapon = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
+            pm.bakeResults(pm.ls('*Helper_Weapon1')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            pm.delete(helperToWeapon)
+        elif pm.ls('Controller_Weapon_Global_R') and pm.ls('Controller_Weapon_Global_L'):#baking and constraints for dual swords etc
+            pm.bakeResults(pm.ls('*Joint_Weapon')[0], pm.ls('*:Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            helperRToWeaponR = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
+            helperLToWeaponL = pm.parentConstraint(pm.ls('*:Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon2')[0], mo = False)
+            pm.bakeResults(pm.ls('*Helper_Weapon1')[0], pm.ls('*Helper_Weapon2')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            pm.delete(helperRToWeaponR, helperLToWeaponL)
+        
     
     def importReference(self):
         #removing weapon references
