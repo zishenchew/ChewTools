@@ -30,6 +30,7 @@ import constraintSwitch
 import ishiiCheck
 import Weapon_Rig
 import PrismSceneManager_001a
+import FingerCopyPasta
 
 reload(Exporter_001Test)#reloading
 reload(whipMake_001)
@@ -38,6 +39,7 @@ reload(constraintSwitch)
 reload(ishiiCheck)
 reload(Weapon_Rig)
 reload(PrismSceneManager_001a)
+reload(FingerCopyPasta)
 
 #window code
 def SERTools_Window():
@@ -64,7 +66,8 @@ def SERTools_Window():
     animFrame = pm.frameLayout(label = u'モーションツールス', labelIndent = 5, width = 450, marginHeight = 5, parent = col)
     pm.rowLayout( 'row3', nc = 5, width = 450)
     pm.button( 'SER whipmake', label = u'SER 鞭リッグ作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'whip = SERTools_001_Test.whipMake_001.whipMake()')
-    pm.button( 'SER constraint', label = u'SER コンすトレイン', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001_Test.constraintSwitch.scriptUI()')
+    pm.button( 'SER fingerMirror_r', label = u'SER 指 右→左', width = 75, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = FingerCopyPasta.rightFingerToLeft)
+    pm.button( 'SER fingerMirror_l', label = u'SER 指 左→右', width = 75, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = FingerCopyPasta.leftFingerToRight)
     pm.button( 'SER ishiiCheck', label = u'SER 石井チェック', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row3', command = 'constr = SERTools_001_Test.ishiiCheck.ishiiCheckFunc()')
     pm.rowLayout( 'row4', nc = 5, width = 450, parent = animFrame)
     pm.button( 'SER WeaponRig', label = u'SER 武器リグ', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = 'row4', command = Weapon_Rig.rigUI)

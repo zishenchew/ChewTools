@@ -172,4 +172,4 @@ class PrismToolsMainWindow():
             if pm.textField(self.refNamespace, q = True, text = True):#if namespace is present
                 pm.createReference(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True), namespace = pm.textField(self.refNamespace, q = True, text = True))
             else:
-                pm.createReference(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True))
+                pm.createReference(pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, annotation = True) + '/' + pm.radioButton(pm.radioCollection(self.radColle, sl = True, q = True), q= True, label = True), namespace = ':')

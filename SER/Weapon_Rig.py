@@ -287,6 +287,84 @@ def rigMake_2hand(mayaFalse):
     pm.setKeyframe('Character1_Ctrl_LeftWristEffectorAux1', v = 1, at = 'blendParent1', itt = 'auto', ott = 'step')
 
 
+def rightHandMain(mayaFalse):
+    #check
+    if not pm.ls('Locator_Pivot'):#first, perform a check to see if locatorMake() has been performed. 
+        pm.confirmDialog(title = u'SER 武器リグ', message = u'先ず、ピボット設定をしてください。')
+        return
+            
+    #rest of rig start
+    constrLoc = pm.spaceLocator(name = "Locator_Constraint")#creating locator to constraint the bone to
+    
+    weapJoint = pm.ls('*Joint_Weapon', type = 'joint')[0]
+    pm.xform(constrLoc, ws = True, t = pm.xform(weapJoint, q = True, t = True, ws = True)) #moving the newly created constraint locator to the translation position of the joint
+    
+    pm.parentConstraint(constrLoc, weapJoint, mo = False)
+    controller_weapon = pm.circle(name = 'Controller_Weapon_Global', r = 9, nr = [0, 1, 0])
+    controller_weapon_local = pm.circle(name = 'Controller_Weapon_Local', r = 7.5, nr = [0, 1, 0])
+    controller_weapon_local_2 = pm.circle(name = 'Controller_Weapon_Local_2', r = 5, nr = [0, 1, 0])
+    controller_LH = pm.circle(name = 'Controller_Weapon_LeftHand', r = 7, nr = [0, 1, 0])
+    pm.parent(controller_LH[0], controller_weapon_local_2[0], controller_weapon_local[0])
+
+    pm.parent(controller_weapon_local[0], controller_weapon[0])
+
+    pm.xform(controller_weapon, ws = True, t = pm.xform('Locator_Pivot', q = True, t = True, ws = True), ro = pm.xform('Locator_Pivot',q = True, ro = True, ws = True))
+    pm.xform(controller_LH, ws = True, t = [0, -10, 0], relative = True)
+    pm.delete('Locator_Pivot')#deleting locator pivot after rig controllers have been created.
+    pm.parent(constrLoc, controller_weapon_local_2[0])
+    
+    #create the extra effectors
+    mel.eval('hikCreateAuxEffector Character1_Ctrl_LeftWristEffector;')#calling left aux effector
+    
+    pm.parentConstraint(controller_LH[0], 'Character1_Ctrl_LeftWristEffectorAux1', mo = False)
+    pm.setKeyframe('Character1_Ctrl_LeftWristEffectorAux1')
+    pm.setKeyframe('Character1_Ctrl_LeftWristEffectorAux1', v = 1, at = 'blendParent1', itt = 'auto', ott = 'step')
+
+    pm.xform(controller_weapon[0], ws = True, translation = pm.xform('Helper_Weapon1', q = True, translation = True, ws = True), rotation = (90, 0, -90))
+    pm.parentConstraint('Character1_Ctrl_RightWristEffector', controller_weapon[0], mo = True, name = 'Constraint_Weapon_Global')
+    pm.setKeyframe('Controller_Weapon_Global')
+    pm.setKeyframe('Controller_Weapon_Global', v = 1, at = 'blendWeaponGlobal', itt = 'auto', ott = 'step')
+    
+
+def leftHandMain(mayaFalse):
+    #check
+    if not pm.ls('Locator_Pivot'):#first, perform a check to see if locatorMake() has been performed. 
+        pm.confirmDialog(title = u'SER 武器リグ', message = u'先ず、ピボット設定をしてください。')
+        return
+            
+    #rest of rig start
+    constrLoc = pm.spaceLocator(name = "Locator_Constraint")#creating locator to constraint the bone to
+    
+    weapJoint = pm.ls('*Joint_Weapon', type = 'joint')[0]
+    pm.xform(constrLoc, ws = True, t = pm.xform(weapJoint, q = True, t = True, ws = True)) #moving the newly created constraint locator to the translation position of the joint
+    
+    pm.parentConstraint(constrLoc, weapJoint, mo = False)
+    controller_weapon = pm.circle(name = 'Controller_Weapon_Global', r = 9, nr = [0, 1, 0])
+    controller_weapon_local = pm.circle(name = 'Controller_Weapon_Local', r = 7.5, nr = [0, 1, 0])
+    controller_weapon_local_2 = pm.circle(name = 'Controller_Weapon_Local_2', r = 5, nr = [0, 1, 0])
+    controller_RH = pm.circle(name = 'Controller_Weapon_RightHand', r = 7, nr = [0, 1, 0])
+    pm.parent(controller_RH[0], controller_weapon_local_2[0], controller_weapon_local[0])
+
+    pm.parent(controller_weapon_local[0], controller_weapon[0])
+
+    pm.xform(controller_weapon, ws = True, t = pm.xform('Locator_Pivot', q = True, t = True, ws = True), ro = pm.xform('Locator_Pivot',q = True, ro = True, ws = True))
+    pm.xform(controller_RH, ws = True, t = [0, -10, 0], relative = True)
+    pm.delete('Locator_Pivot')#deleting locator pivot after rig controllers have been created.
+    pm.parent(constrLoc, controller_weapon_local_2[0])
+    
+    #create the extra effectors
+    mel.eval('hikCreateAuxEffector Character1_Ctrl_RightWristEffector;')#calling left aux effector
+    
+    pm.parentConstraint(controller_RH[0], 'Character1_Ctrl_RightWristEffectorAux1', mo = False)
+    pm.setKeyframe('Character1_Ctrl_RightWristEffectorAux1')
+    pm.setKeyframe('Character1_Ctrl_RightWristEffectorAux1', v = 1, at = 'blendParent1', itt = 'auto', ott = 'step')
+
+    pm.xform(controller_weapon[0], ws = True, translation = pm.xform('Helper_Weapon2', q = True, translation = True, ws = True), rotation = (90, 0, 90))
+    pm.parentConstraint('Character1_Ctrl_LeftWristEffector', controller_weapon[0], mo = True, name = 'Constraint_Weapon_Global')
+    pm.setKeyframe('Controller_Weapon_Global')
+    pm.setKeyframe('Controller_Weapon_Global', v = 1, at = 'blendWeaponGlobal', itt = 'auto', ott = 'step')
+
+
 def rightHandGlobal(mayaFalse):
     pm.setKeyframe('Character1_Ctrl_RightWristEffectorAux1', at = ['translate', 'rotate'])
     pm.setKeyframe('Character1_Ctrl_RightWristEffectorAux1', v = 0, at = 'blendParent1', itt = 'auto', ott = 'step')
@@ -325,6 +403,15 @@ def auxOnLeft(mayaFalse):
     pm.setKeyframe('Character1_Ctrl_LeftWristEffectorAux1', v = 1, at = 'rr', itt = 'auto', ott = 'step')
     pm.currentTime(pm.currentTime(), update = True)#updating the viewport
 
+def rightMaster(mayaFalse):
+    pm.setAttr('Character1_Ctrl_RightWristEffector.rt', 0)
+    pm.setAttr('Character1_Ctrl_RightWristEffector.rr', 0)
+    pm.parentConstraint('Character1_Ctrl_RightWristEffector', 'Controller_Weapon_Global', mo = True)
+    
+def leftMaster(mayaFalse):
+    pm.setAttr('Character1_Ctrl_LeftWristEffector.rt', 0)
+    pm.setAttr('Character1_Ctrl_LeftWristEffector.rr', 0)
+    pm.parentConstraint('Character1_Ctrl_LeftWristEffector', 'Controller_Weapon_Global', mo = True)
 
 
 ###############################################################
@@ -378,9 +465,16 @@ def rigUI(mayaFalse = False):
     twohand_4 = pm.rowLayout( 'switchRow2h_4', nc = 5, width = 600, parent = switchFrame3)
     pm.button( 'lhAuxOff', label = u'右手 → Aux Off', width = 112.5, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twohand_4, command = auxOffRight)
     pm.button( 'rhAuxOff', label = u'左手 → Aux Off', width = 112.5, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twohand_4, command = auxOffLeft)
+
+    #pm.text(label = '', parent = twohand_4, width = 50)
+    #pm.button( 'rightMaster', label = u'右手 → 連れる', width = 112.5, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twohand_4, command = rightMaster)
+
     twohand_5 = pm.rowLayout( 'switchRow2h_5', nc = 5, width = 600, parent = switchFrame3)
     pm.button( 'lhAuxOn', label = u'右手 → Aux On', width = 112.5, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twohand_5, command = auxOnRight)
     pm.button( 'rhAuxOn', label = u'左手 → Aux On', width = 112.5, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twohand_5, command = auxOnLeft)
+    
+    #pm.text(label = '', parent = twohand_5, width = 50)
+    #pm.button( 'leftMaster', label = u'左手 → 連れる', width = 112.5, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twohand_5, command = leftMaster)
     
     
     #rig creating
@@ -402,6 +496,12 @@ def rigUI(mayaFalse = False):
     twoHandRow = pm.rowLayout( 'twoHandRow', nc = 5, width = 600, parent = twoHandFrame)
     pm.button( 'twohandLocator', label = u'ロケーターを作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twoHandRow, command = locatorMake)
     pm.button( 'twoHandRig', label = u'リグを作る', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twoHandRow, command = rigMake_2hand)
+    twoHandRow2 = pm.rowLayout( 'twoHandRow2', nc = 5, width = 600, parent = twoHandFrame)
+    pm.text(label = '', parent = twoHandRow2, width = 150)
+    pm.button( 'twoHandRight', label = u'両手、右手主', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twoHandRow2, command = rightHandMain)
+    twoHandRow3 = pm.rowLayout( 'twoHandRow3', nc = 5, width = 600, parent = twoHandFrame)
+    pm.text(label = '', parent = twoHandRow3, width = 150)
+    pm.button( 'twoHandLeft', label = u'両手、左手主', width = 150, height = 20, backgroundColor = ( 0.6, 0.6, 0.6), parent = twoHandRow3, command = leftHandMain)
     
     
     pm.showWindow()
