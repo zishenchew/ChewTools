@@ -333,7 +333,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
             print('no aim')
-            if pm.getAttr('cameraShape1.filmFit') != 2:
+            if pm.getAttr('cameraShape2.filmFit') != 2:
                 pm.confirmDialog(title = 'SER 出力ツール', message = u'カメラ「解像度ゲートに適合」の設定は「垂直」ではないです。')
             #export the camera right away
             pm.select('camera2')
