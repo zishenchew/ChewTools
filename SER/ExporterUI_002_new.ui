@@ -93,7 +93,7 @@
     <widget class="QRadioButton" name="ingameButton1">
      <property name="geometry">
       <rect>
-       <x>130</x>
+       <x>110</x>
        <y>140</y>
        <width>91</width>
        <height>16</height>
@@ -109,7 +109,7 @@
     <widget class="QRadioButton" name="ingameButton2">
      <property name="geometry">
       <rect>
-       <x>260</x>
+       <x>240</x>
        <y>140</y>
        <width>110</width>
        <height>16</height>
@@ -178,7 +178,7 @@
     <widget class="QCheckBox" name="helperShadowBox">
      <property name="geometry">
       <rect>
-       <x>380</x>
+       <x>350</x>
        <y>140</y>
        <width>181</width>
        <height>16</height>
@@ -189,6 +189,19 @@
      </property>
      <property name="checked">
       <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="HelperShadowExp">
+     <property name="geometry">
+      <rect>
+       <x>550</x>
+       <y>140</y>
+       <width>151</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Helper_Shadow 出力</string>
      </property>
     </widget>
    </widget>

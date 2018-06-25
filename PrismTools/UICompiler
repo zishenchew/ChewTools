@@ -1,0 +1,21 @@
+import os
+from pyside2uic import compileUi
+import maya.cmds as cmds
+
+
+def convert_qtui_to_py():
+    caption = 'Select QT UI file...'
+    fileFilter = 'QT UI Files (*ui)(*.ui)'
+    result = cmds.fileDialog2(ds=2, ff=fileFilter, cap=caption, fm=1, dir='D:\ChewTools\SER')
+    if None == result:
+        return
+    try:
+        py_file = open(os.path.splitext(result[0])[0] + '.py', 'w')
+        compileUi(result[0], py_file, False, 4, False)
+        py_file.close()
+        cmds.warning('File converted.')
+    except IOError:
+        cmds.warning('Could not open file!')
+
+
+convert_qtui_to_py()

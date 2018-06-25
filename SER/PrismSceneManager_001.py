@@ -39,15 +39,44 @@ class PrismToolsMainWindow():
         #menu bar
         menuBar = pm.menuBarLayout()
         motionMenu = pm.menu(label=u'モーション')
+        charaMoMenu = pm.menuItem(label=u'キャラ', parent=motionMenu, subMenu=True)
+        kyojinMoMenu = pm.menuItem(label=u'キョウジン', parent = motionMenu, subMenu=True)
+        '''
         for i in sorted(self.motionFolders):
             mainBody_arg = partial(self.mainBody, self.motionFolders[i])
             item = pm.menuItem(label=i, command = mainBody_arg, parent = motionMenu)
+        '''
+        for i in sorted(self.motionFolders):
+            try:
+                if i.split('_')[-2][0] == 'n':
+                    mainBody_arg = partial(self.mainBody, self.motionFolders[i])
+                    pm.menuItem(label=i, command = partial(self.mainBody, self.motionFolders[i]), parent = charaMoMenu)
+                elif i.split('_')[-2][0] == 'k':
+                    mainBody_arg = partial(self.mainBody, self.motionFolders[i])
+                    pm.menuItem(label=i, command = partial(self.mainBody, self.motionFolders[i]), parent = kyojinMoMenu)
+            except:
+                pass
+
         
         modelMenu = pm.menu(label=u'モデル')
+        charSubMenu = pm.menuItem(label=u'キャラ', parent = modelMenu, subMenu = True)
+        kyojinSubMenu = pm.menuItem(label=u'キョウジン', parent = modelMenu, subMenu = True)
+        weapSubMenu = pm.menuItem(label=u'武器', parent = modelMenu, subMenu = True)
+        for i in sorted(self.modelFolders):
+            if i.split('_')[-1][0] == 'n':
+                mainBody_arg = partial(self.mainBody, self.modelFolders[i])
+                item = pm.menuItem(label=i, command=mainBody_arg, parent=charSubMenu)
+            elif i.split('_')[-1][0] == 'k':
+                mainBody_arg = partial(self.mainBody, self.modelFolders[i])
+                item = pm.menuItem(label=i, command=mainBody_arg, parent=kyojinSubMenu)
+            elif i.split('_')[-1][0] == 'w':
+                mainBody_arg = partial(self.mainBody, self.modelFolders[i])
+                item = pm.menuItem(label=i, command=mainBody_arg, parent=weapSubMenu)
+        '''
         for i in sorted(self.modelFolders):
             mainBody_arg = partial(self.mainBody, self.modelFolders[i])
             item = pm.menuItem(label=i, command = mainBody_arg, parent = modelMenu)        
-
+        '''
         
         #label
         self.masterCol = pm.columnLayout('master col', width = 600)
