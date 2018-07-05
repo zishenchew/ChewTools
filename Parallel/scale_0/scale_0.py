@@ -65,6 +65,13 @@ class ParallelScale():
 
     def scaleChara(self, mayaFalse):
 
+        #this part does the importing and admin stuff
+        try:
+            pm.createReference('//p.sv/Prism/project/Parallel/element/character_Roll/scenes/' + pm.optionMenu(self.charalist, q = True, value = True)[-4:-1] + '001_SP01.mb',
+                           namespace=':')
+        except:
+            pm.confirmDialog(title=u'Parallel scaling', message=u'Parallel フォルダーの許可がないです。')
+        #this part does the scaling
         pm.optionMenu('listofchara', q = True, value = True)
         inverseScale = 1/self.nameScale[pm.optionMenu(self.charalist, q = True, value = True)]
         pm.scale('Reference|Root', inverseScale, inverseScale, inverseScale)
@@ -76,3 +83,8 @@ class ParallelScale():
             except:
                 print 'no keys to copypasta'
         pm.scaleKey('Reference1|Root|Hips', valueScale = inverseScale, valuePivot = 0, attribute = 'translate')
+
+        #this part cleans up the file
+        pm.delete('Reference')
+        pm.listReferences()[0].importContents(removeNamespace=False)
+        pm.rename('Reference1', 'Reference')
