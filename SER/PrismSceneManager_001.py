@@ -171,25 +171,27 @@ class PrismToolsMainWindow():
                                 defaultButton=u'はい',
                                 cancelButton=u'いいえ', dismissString=u'いいえ'):
                 print 'overwrite and save'
-                '''
+
+                pm.saveAs(self.savePath + '/' + pm.textField(self.sceneName, q=True, text=True),
+                          type='mayaAscii')  # saving before exporting
                 pm.saveFile()  # saving before exporting
                 self.saveImageCreate(False)
                 self.mainBody(self.path, False)
                 pm.confirmDialog(message=u'保存しました！', title=u'Prism Scene Manager')
-                '''
+
 
         else:
             print pm.textField(self.sceneName, q=True,
                                text=True)
             print 'save new file'
-            '''
+
             pm.saveAs(self.savePath + '/' + pm.textField(self.sceneName, q=True, text=True),
                       type='mayaAscii')  # saving before exporting
             pm.saveFile()  # save?
             self.saveImageCreate(False)
             self.mainBody(self.path, False)  # call mainBody once more
             pm.confirmDialog(message=u'保存しました！', title=u'Prism Scene Manager')
-            '''
+
 
     def comment(self, mayaFalse):
         pm.promptDialog(title='Prism Scene Manager', message=u'コメントを書いてください')
