@@ -102,7 +102,7 @@ class PrismToolsMainWindow():
         pm.text(label=u'保存：', width=85, height=20, align='right', parent=exportLayout)
         pm.text(label='', width=15, align='left', parent=exportLayout, enable=False)  # spacer
         pm.button(label=u'保存', command=self.saveFile, width=75, parent=exportLayout, height=20)
-        pm.button(label=u'チェックフォルダーに出す', command=ishiiCheck.ishiiCheckFunc(), width=100, parent=exportLayout, height=20)
+        pm.button(label=u'チェックに出す', command=ishiiCheck.ishiiCheckFunc, width=75, parent=exportLayout, height=20)
 
         spacerLayout = pm.rowLayout(parent=self.masterCol, nc=5)
         pm.text(label='', width=15, height=25, align='left', parent=spacerLayout, enable=False)  # spacer

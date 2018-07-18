@@ -1,12 +1,12 @@
 # encoding: utf-8
 import datetime
 import pymel.core as pm
-import maya.cmds as cmds
+import maya.mel as mel
 import os
 import maya.OpenMayaAnim as animAPI
 
 
-def ishiiCheckFunc():
+def ishiiCheckFunc(*mayaFalse):
     
     fileIndex = open('//p.sv/Prism/project/SER/user/chew/ref/ishiiCheck_index.ref', 'rb')
     indexDump = fileIndex.read().decode("UTF-8")
@@ -28,8 +28,12 @@ def ishiiCheckFunc():
     if 'Idle' in fileName:
         print fileName[:11]
         pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:11]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 50, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value())
-        cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:11]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
+        #cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:11]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
+        mel.eval('FBXExportBakeComplexAnimation -v 1;FBXExportBakeComplexAnimation -q;')
+        mel.eval('FBXExport -f "//p.sv/Prism/project/SER/check/motion/%s/%s/%s";' %(todaydate, saveName, fileName[:11]))
     elif 'Attack' in fileName:
         print fileName[:13]
         pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:13]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 50, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value())
-        cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:13]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
+        #cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:13]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
+        mel.eval('FBXExportBakeComplexAnimation -v 1;FBXExportBakeComplexAnimation -q;')
+        mel.eval('FBXExport -f "//p.sv/Prism/project/SER/check/motion/%s/%s/%s";' %(todaydate, saveName, fileName[:13]))
