@@ -16,7 +16,7 @@ def ishiiCheckFunc():
     fileIndex.close()
     
     todaydate = datetime.datetime.now().strftime("%y%m%d")
-    fileName = cmds.file(q = True, sceneName = True, shortName = True).rstrip('.mb').rstrip('.ma')
+    fileName = pm.sceneName().split('/')[-1].rstrip('.ma')#cmds.file(q = True, sceneName = True, shortName = True).rstrip('.mb').rstrip('.ma')
     saveName = fileName[1:3] + '_' + charaNameIndex[fileName[:3]]
     
     savePath = r"\\p.sv\Prism\project\SER\check\motion\%s\%s" %(todaydate, saveName)
@@ -27,9 +27,9 @@ def ishiiCheckFunc():
     
     if 'Idle' in fileName:
         print fileName[:11]
-        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:11]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 100, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value())
+        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:11]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 50, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value())
         cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:11]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
     elif 'Attack' in fileName:
         print fileName[:13]
-        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:13]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 100, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value())
+        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:13]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 50, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value())
         cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:13]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
