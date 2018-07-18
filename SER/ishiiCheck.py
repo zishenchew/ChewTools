@@ -27,13 +27,13 @@ def ishiiCheckFunc(*mayaFalse):
     
     if 'Idle' in fileName:
         print fileName[:11]
-        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:11]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 50, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value(), width=960, height=540)
+        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:11]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 100, compression = "H.264", quality = 50, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value(), widthHeight=[960, 540])
         #cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:11]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
         mel.eval('FBXExportBakeComplexAnimation -v 1;FBXExportBakeComplexAnimation -q;')
         mel.eval('FBXExport -f "//p.sv/Prism/project/SER/check/motion/%s/%s/%s";' %(todaydate, saveName, fileName[:11]))
     elif 'Attack' in fileName:
         print fileName[:13]
-        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:13]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 50, compression = "H.264", quality = 100, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value(), width=960, height=540)
+        pm.playblast(format = 'qt', filename = r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s.mov" %(todaydate, saveName, fileName[:13]), forceOverwrite = True, clearCache = True, viewer = False, showOrnaments = True, fp = 4, percent = 100, compression = "H.264", quality = 50, startTime = animAPI.MAnimControl.minTime().value(), endTime = animAPI.MAnimControl.maxTime().value(), widthHeight=[960, 540])
         #cmds.file(r"\\p.sv\Prism\project\SER\check\motion\%s\%s\%s" %(todaydate, saveName, fileName[:13]), force = True, options = 'v=0;', type = 'FBX export', pr = True, ea = True)
         mel.eval('FBXExportBakeComplexAnimation -v 1;FBXExportBakeComplexAnimation -q;')
         mel.eval('FBXExport -f "//p.sv/Prism/project/SER/check/motion/%s/%s/%s";' %(todaydate, saveName, fileName[:13]))
