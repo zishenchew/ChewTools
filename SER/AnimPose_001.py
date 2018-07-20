@@ -90,8 +90,11 @@ def poseTest():
         readFile.close()
         
         for i in tPose:
-            split = i.split()
-            pm.xform(split[0], translation = [split[1], split[2], split[3]], rotation = [split[4], split[5], split[6]])
+            try:
+                split = i.split()
+                pm.xform(split[0], translation = [split[1], split[2], split[3]], rotation = [split[4], split[5], split[6]])
+            except:
+                print 'skip'
     
     def resetCharTPose(_):
         #reading data from pose

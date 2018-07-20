@@ -177,10 +177,12 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'charaModel':
             self.charaNameText = self.charaNameIndex[self.charaNumber]  #charaModel
             self.weaponNameText = None
-            if self.fileNameSplit[2] == 'n':
-                self.kyojinka = '_001_'
-            else:
+            if self.fileNameSplit[2] == 'k':
                 self.kyojinka = '_000_'
+            elif self.fileNameSplit[2] == 'n':
+                self.kyojinka = '_001_'
+            elif len(self.fileNameSplit[2]) == 3 and self.fileNameSplit[2][0] == 'n':
+                self.kyojinka = '_00' + self.fileNameSplit[2][2] + '_'
         elif self.fileType == 'commonMotion':
             self.charaNameText = u'武器共通モーション'                   #commonMotion
             self.weaponNameText = self.weaponIndex[self.weaponNumber]   #commonMotion
@@ -458,7 +460,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             else:
                 copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
                 print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
-            
+
             
             pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
             print('SER Export complete!')
