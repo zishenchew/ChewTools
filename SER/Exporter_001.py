@@ -625,21 +625,35 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         pm.delete(delList)
         print(str(delList) + u' を削除します')
         #delete the mesh under character Holder
-        
-        if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or self.fileNameSplit[1] == 'ResonizeIdle':  #this part lists the cases where Helper_Shadow is deleted
-            print 'Ingame motion, deleting Helper_Shadow'
-            for i in pm.listRelatives('Character_Holder', type = 'transform'):
-                if i.find('Character_Reference') == -1:
-                    print (i + u' を削除します')
-                    pm.delete(i)
-        
-        else: #this part lists the cases where Helper_Shadow is preserved
+
+        if self.HelperShadowExp.isChecked() == True:  # creating a checkbox for exporting helper shadow
             print 'Not ingame motion, not deleting shadow helper'
-            for i in pm.listRelatives('Character_Holder', type = 'transform'):
+            for i in pm.listRelatives('Character_Holder', type='transform'):
                 if i.find('Character_Reference') == -1 and i.find('Helper_Reference') == -1:
                     print (i + u' を削除します')
                     pm.delete(i)
-            for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type = 'transform'):
+            for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type='transform'):
+                if not 'Helper_Shadow' in str(i):
+                    pm.delete(i)
+
+            pm.setKeyframe('Helper_Shadow', t=0)
+
+
+        elif self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or \
+                self.fileNameSplit[1] == 'ResonizeIdle':  # this part lists the cases where Helper_Shadow is deleted
+            print 'Ingame motion, deleting Helper_Shadow'
+            for i in pm.listRelatives('Character_Holder', type='transform'):
+                if i.find('Character_Reference') == -1:
+                    print (i + u' を削除します')
+                    pm.delete(i)
+
+        else:  # this part lists the cases where Helper_Shadow is preserved
+            print 'Not ingame motion, not deleting shadow helper'
+            for i in pm.listRelatives('Character_Holder', type='transform'):
+                if i.find('Character_Reference') == -1 and i.find('Helper_Reference') == -1:
+                    print (i + u' を削除します')
+                    pm.delete(i)
+            for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type='transform'):
                 if not 'Helper_Shadow' in str(i):
                     pm.delete(i)
     
