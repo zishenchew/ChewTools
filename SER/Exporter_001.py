@@ -571,8 +571,29 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             helperLToWeaponL = pm.parentConstraint(pm.ls('*:Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon2')[0], mo = False)
             pm.bakeResults(pm.ls('*Helper_Weapon1')[0], pm.ls('*Helper_Weapon2')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
             pm.delete(helperRToWeaponR, helperLToWeaponL)
-        
-    
+        elif pm.ls('Controller_Weapon_GlobalR') and pm.ls(
+                'Controller_Weapon_GlobalL'):  # baking and constraints for two hand that's being used in 110_n02
+            pm.bakeResults(pm.ls('*Joint_Weapon')[0],
+                           t=(animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()),
+                           simulation=True)
+            helperRToWeaponR = pm.parentConstraint(pm.ls('*Joint_Weapon', type='joint')[0], pm.ls('*Helper_Weapon1')[0],
+                                                   mo=False)
+            pm.bakeResults(pm.ls('*Helper_Weapon1')[0],
+                           t=(animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()),
+                           simulation=True)
+            pm.delete(helperRToWeaponR)
+        elif pm.ls('Controller_Weapon_RightHand') and pm.ls(
+                'Controller_Weapon_LeftHand'):  # baking and constraints for 110_n02
+            pm.bakeResults(pm.ls('*Joint_Weapon')[0],
+                           t=(animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()),
+                           simulation=True)
+            helperRToWeaponR = pm.parentConstraint(pm.ls('*Joint_Weapon', type='joint')[0], pm.ls('*Helper_Weapon1')[0],
+                                                   mo=False)
+            pm.bakeResults(pm.ls('*Helper_Weapon1')[0],
+                           t=(animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()),
+                           simulation=True)
+            pm.delete(helperRToWeaponR)
+
     def importReference(self):
         #removing weapon references
         for i in cmds.file(reference = True, query = True, shortName = True):
