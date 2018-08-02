@@ -656,8 +656,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type='transform'):
                 if not 'Helper_Shadow' in str(i):
                     pm.delete(i)
-
-            pm.setKeyframe('Helper_Shadow', t=0)
+            pm.parentConstraint('Character_Hips', 'Helper_Shadow', st='y', sr=['x', 'y', 'z'])
+            self.helperShadowBake()
+            #pm.setKeyframe('Helper_Shadow', t=0)
 
 
         elif self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or \
