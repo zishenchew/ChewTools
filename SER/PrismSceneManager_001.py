@@ -170,7 +170,7 @@ class PrismToolsMainWindow():
                         text=True) in os.listdir(self.savePath):  # check if the text field option is the same as the current scene file
             if pm.confirmDialog(title=u'SER シーン管理', message=u'上書きしますか?', button=[u'はい', u'いいえ'],
                                 defaultButton=u'はい',
-                                cancelButton=u'いいえ', dismissString=u'いいえ'):
+                                cancelButton=u'いいえ', dismissString=u'いいえ') == u'はい':
                 print 'overwrite and save'
 
                 pm.saveAs(self.savePath + '/' + pm.textField(self.sceneName, q=True, text=True),
@@ -179,7 +179,8 @@ class PrismToolsMainWindow():
                 self.saveImageCreate(False)
                 self.mainBody(self.path, False)
                 pm.confirmDialog(message=u'保存しました！', title=u'Prism Scene Manager')
-
+            else:
+                pm.confirmDialog(message=u'セーブがキャンセルしました。！', title=u'Prism Scene Manager')
 
         else:
             print pm.textField(self.sceneName, q=True,
