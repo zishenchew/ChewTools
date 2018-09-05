@@ -189,6 +189,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'cutScene':
             self.charaNameText = self.charaNameIndex[self.charaNumber]                   #cutScene
             self.weaponNameText = u'必殺技'#cutScene
+            self.helperShadowBox.setChecked(False) #setting the hissatsuwaza states
+            self.HelperShadowExp.setChecked(True)
         elif self.fileType == 'chain':
             self.charaNameText = u'連携'
             self.weaponNameText = self.weaponIndex[self.weaponNumber] 

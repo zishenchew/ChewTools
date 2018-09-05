@@ -92,7 +92,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.fileType = 'kyojinStep'
             self.charaNumber = self.fileNameSplit[0]
             self.weaponNumber = self.fileNameSplit[1]
-        elif len(self.fileNameSplit[0]) == 3 and self.fileNameSplit[0] != 'SER':
+        elif len(self.fileNameSplit[0]) == 3 and self.fileNameSplit[0] != 'SER' and self.fileNameSplit[0] != 'Gun' and self.fileNameSplit[0] != 'Bow':
             if len(self.fileNameSplit[1]) == 4:
                 self.fileType = 'cutScene'
                 self.charaNumber = self.fileNameSplit[0]
@@ -120,6 +120,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.charaNumber = None
             self.weaponNumber = self.fileNameSplit[0]
         
+        else:#in this case, file is assumed to be a weapon
+            self.fileType = 'weaponModel'
+            self.charaNumber = None
+            self.weaponNumber = 'WP'#pm.sceneName().rstrip('.mb').rstrip('.ma').split('/')[-3].split('_')[1]
         
         
         self.currentAddress = cmds.file(q = True, location = True).rstrip(self.fileName)
@@ -173,6 +177,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.weaponNameText = None
             if self.fileNameSplit[2] == 'n':
                 self.kyojinka = '_001_'
+            elif len(self.fileNameSplit[2]) != 1:
+                self.kyojinka = '_0' + self.fileNameSplit[2][1:] + '_'
             else:
                 self.kyojinka = '_000_'
         elif self.fileType == 'commonMotion':
@@ -181,6 +187,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'cutScene':
             self.charaNameText = self.charaNameIndex[self.charaNumber]                   #cutScene
             self.weaponNameText = u'必殺技'#cutScene
+            self.helperShadowBox.setChecked(False) #setting the hissatsuwaza states
+            self.HelperShadowExp.setChecked(True)
         elif self.fileType == 'chain':
             self.charaNameText = u'連携'
             self.weaponNameText = self.weaponIndex[self.weaponNumber] 
@@ -196,6 +204,9 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         elif self.fileType == 'kyojinCommonFinish':
             self.charaNameText = u'キョウジン通常Finish'                   #kyojin common step
             self.weaponNameText = 'Resonize Finish'
+        elif self.fileType == 'weaponModel':
+            self.charaNameText = None
+            self.weaponNameText = self.weaponIndex[self.weaponNumber]  #weaponModel
         
         if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion':
             self.ingame = True
@@ -249,7 +260,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.exportPathText = self.boneFBX + '/' + self.charaNumber + '/Motions/' + self.weaponIndex[self.weaponNumber].lstrip('00_')
         elif self.fileType == 'kyojinCommonFinish':
             self.exportPathText = r'D:/SER/SVN/Unity/motion/fbx_yard/Assets/Models_Characters/_Animations/00_Common'
-        
+        elif self.fileType == 'weaponModel':
+            self.exportPathText = 'D:/SER/SVN/MAYA/model/' + pm.sceneName().rstrip('.mb').rstrip('.ma').split('/')[-3] + '/FBX'
         '''
         INPUTS ########################################################################################################################################################
         '''
@@ -267,8 +279,11 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             self.ExporterTab.setCurrentIndex(0)#setting animation(0) tab to be switched whenever the tool is loaded
         
         #model
-        elif self.fileType == 'charaModel':
-            self.charaNameInput_2.setText(self.charaNameText) #same as motion
+        elif self.fileType == 'charaModel' or self.fileType == 'weaponModel':
+            if self.fileType == 'charaModel':
+                self.charaNameInput_2.setText(self.charaNameText) #same as motion
+            else:
+                self.charaNameInput_2.setText(self.weaponNameText.split('_')[1]) #same as motion
             self.exportPathInput_2.setText(self.exportPathText) #
             #print 'modelTab' #for debugging purposes
             self.ExporterTab.setCurrentIndex(1)#setting model(1) tab to be switched whenever the tool is loaded
@@ -333,6 +348,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         if pm.objExists('camera1_group') == False and pm.objExists('camera_group') == False and pm.objExists('camera2') == True: #creating a conditional for when the animator prefers to use a no-aim camera
             print('no aim')
+            if pm.getAttr('cameraShape2.filmFit') != 2:
+                pm.confirmDialog(title = 'SER 出力ツール', message = u'カメラ「解像度ゲートに適合」の設定は「垂直」ではないです。')
             #export the camera right away
             pm.select('camera2')
             pm.setAttr('cameraShape2.filmFit', 2)
@@ -347,6 +364,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
     def cameraShapeRename(self):
         if pm.objExists('camera1Shape'):
             pm.rename('camera1Shape', 'cameraShape1')
+        if pm.getAttr('cameraShape1.filmFit') != 2:
+            pm.confirmDialog(title = 'SER 出力ツール', message = u'カメラ「解像度ゲートに適合」の設定は「垂直」ではないです。')
     
     
     def aimCamMake(self): #will be deprecated
@@ -411,44 +430,52 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
 
     def animExpButton(self):
-        #combined export button
-        self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving as a backup before exporting
-        if self.ingameExport.isChecked() == True:#motion export
+        try:
+            #combined export button
+            self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving as a backup before exporting
+            if self.ingameExport.isChecked() == True:#motion export
+                
+                self.animExport_1()
+                self.animExport_2()
+                
+            elif self.camExport.isChecked() == True: #camera export
+                self.cameraExport()
+                
+            '''                                                                                  DELETE LATER
+            elif self.cutsceneExport.isChecked() == True:
+               #self.cutSceneExport()
+               pm.confirmDialog(title = 'SER 出力ツール', message = u'Not yet implemented /nまだ書いていません')
+               pass
+            '''
             
-            self.animExport_1()
-            self.animExport_2()
+            pm.openFile(self.saveFileName, force = True) #opening original file
+            pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+            os.remove(self.saveFileName)
             
-        elif self.camExport.isChecked() == True: #camera export
-            self.cameraExport()
+            try: #spamming delete entry in case there are entries before already
+                mel.eval('gameExp_DeleteAnimationClipLayout 0;')
+            except:
+                pass
+            for i in pm.lsUI(windows = True):#closing the game exporter window
+                if 'gameExporterWindow' in i:
+                    pm.deleteUI(i)
             
-        
-        pm.openFile(self.saveFileName, force = True) #opening original file
-        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
-        os.remove(self.saveFileName)
-        
-        try: #spamming delete entry in case there are entries before already
-            mel.eval('gameExp_DeleteAnimationClipLayout 0;')
+            #copy pasta part
+            if self.camExport.isChecked() == True: #camera export
+                copy2(self.exportPath.text() + r'/' + self.exportName.text() + '_cam.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
+                print self.exportPath.text() + r'/' + self.exportName.text() + '_cam.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
+            else:
+                copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
+                print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
+            
+            
+            pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
+            print('SER Export complete!')
         except:
-            pass
-        for i in pm.lsUI(windows = True):#closing the game exporter window
-            if 'gameExporterWindow' in i:
-                pm.deleteUI(i)
-        '''
-        #copy pasta part
-        if self.camExport.isChecked() == True: #camera export
-            copy2(self.exportPath.text() + r'/' + self.exportName.text() + '_cam.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
-            print self.exportPath.text() + r'/' + self.exportName.text() + '_cam.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
-        else:
-            copy2(self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]) #r'D:\SER\GIT/Assets/AssetBundle/Resources' +
-            print self.exportPath.text() + r'/' + self.exportName.text() + '.fbx', r'D:/SER/GIT/Assets/AssetBundle/Resources' + self.exportPath.text()[39:]
-        '''
-        
-        pm.confirmDialog(title = 'SER 出力ツール', message = u'モーションは出力しました')
-        print('SER Export complete!')
-        pm.openFile(self.saveFileName, force = True)#re-open the save file
-        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
-        os.remove(self.saveFileName)
-        
+            pm.confirmDialog(title = 'SER 出力ツール', message = u'エラーが発生しました。早速チューまで連絡してください。')
+            pm.openFile(self.saveFileName, force = True)#re-open the save file
+            pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
+            os.remove(self.saveFileName)
         
         
     def animExport_1(self):
@@ -540,17 +567,17 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
         
         #this part bakes the weapon and helperweapon
-        if pm.ls('Controller_Weapon_Global'):#for single handed weapons
-            pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
-            helperToWeapon = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
-            pm.bakeResults(pm.ls('*Helper_Weapon1')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
-            pm.delete(helperToWeapon)
-        elif pm.ls('Controller_Weapon_Global_R') and pm.ls('Controller_Weapon_Global_L'):#baking and constraints for dual swords etc
+        if pm.ls('Controller_Weapon_Global_R') and pm.ls('Controller_Weapon_Global_L'):#baking and constraints for dual swords etc
             pm.bakeResults(pm.ls('*Joint_Weapon')[0], pm.ls('*:Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
             helperRToWeaponR = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
             helperLToWeaponL = pm.parentConstraint(pm.ls('*:Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon2')[0], mo = False)
             pm.bakeResults(pm.ls('*Helper_Weapon1')[0], pm.ls('*Helper_Weapon2')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
             pm.delete(helperRToWeaponR, helperLToWeaponL)
+        elif pm.ls('Controller_Weapon_Global*'):#for single handed weapons
+            pm.bakeResults(pm.ls('*Joint_Weapon')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            helperToWeapon = pm.parentConstraint(pm.ls('*Joint_Weapon', type = 'joint')[0], pm.ls('*Helper_Weapon1')[0], mo = False)
+            pm.bakeResults(pm.ls('*Helper_Weapon1')[0], t = (animAPI.MAnimControl.minTime().value(), animAPI.MAnimControl.maxTime().value()), simulation = True)
+            pm.delete(helperToWeapon)
         
     
     def importReference(self):
@@ -606,7 +633,21 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         print(str(delList) + u' を削除します')
         #delete the mesh under character Holder
         
-        if self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or self.fileNameSplit[1] == 'ResonizeIdle':  #this part lists the cases where Helper_Shadow is deleted
+        
+        if self.HelperShadowExp.isChecked() == True:#creating a checkbox for exporting helper shadow
+            print 'Not ingame motion, not deleting shadow helper'
+            for i in pm.listRelatives('Character_Holder', type = 'transform'):
+                if i.find('Character_Reference') == -1 and i.find('Helper_Reference') == -1:
+                    print (i + u' を削除します')
+                    pm.delete(i)
+            for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type = 'transform'):
+                if not 'Helper_Shadow' in str(i):
+                    pm.delete(i)
+            
+            pm.setKeyframe('Helper_Shadow', t = 0)
+        
+        
+        elif self.fileType == 'charaMotion' and self.fileNameSplit[2] != 'Special' or self.fileType == 'commonMotion' or self.fileNameSplit[1] == 'ResonizeIdle':  #this part lists the cases where Helper_Shadow is deleted
             print 'Ingame motion, deleting Helper_Shadow'
             for i in pm.listRelatives('Character_Holder', type = 'transform'):
                 if i.find('Character_Reference') == -1:
@@ -622,7 +663,8 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
             for i in pm.listRelatives(pm.ls('Helper_Reference')[0], type = 'transform'):
                 if not 'Helper_Shadow' in str(i):
                     pm.delete(i)
-    
+        
+        
     
     def modelExport(self):
         #create folder if it doesn't exist
@@ -635,7 +677,7 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         print('SER Export complete!')
         
     def modelExport_1(self):
-        self.saveFileName = pm.saveAs(pm.sceneName()[:-3] + '_temp.ma') #saving before exporting
+        self.saveFileName = cmds.file(save = True) #saving before exporting
         #delete everything except mesh
         mel.eval('HIKCharacterControlsTool') #command to open humanIK
         
@@ -654,8 +696,10 @@ class MainWindow(QtWidgets.QDialog, Ui_MainWindow):
         
     def modelExport_2(self):
         #exporting
-        cmds.file(self.exportPathInput_2.text() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
-        pm.openFile(self.saveFileName, force = True)#re-open the save file
-        pm.renameFile(self.saveFileName.replace('_temp', '')) #renames the file back to the original name before it was 
-        os.remove(self.saveFileName)
+        if self.fileType == 'charaModel':
+            cmds.file(self.exportPathInput_2.text() + '/' + self.charaNumber + self.kyojinka + 'Model.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
+        elif self.fileType == 'weaponModel':
+            cmds.file(self.exportPathInput_2.text() + '/' +pm.sceneName().rstrip('.mb').rstrip('.ma').split('/')[-1] + '.fbx', force = True, type = 'FBX export', exportAll = True, options = 'v=0')#underscore is already included in the kyojinka string on both sides
+        #re-open the save file
+        cmds.file(self.saveFileName, open = True, force = True)
         #print('modelExport_2')
