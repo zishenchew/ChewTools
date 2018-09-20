@@ -25,12 +25,45 @@ For now, just write the 1st and 2nd tool.
 ###########################################################################################################
 '''
 
-from maya import OpenMayaUI as omui 
+#from maya import OpenMayaUI as omui
 import pymel.core as pm
-import maya.cmds as cmds
+i#mport maya.cmds as cmds
 import maya.mel as mel
-import os
-import sys
+#import os
+#import sys
 #sys.path.append('//p.sv/Prism/project/SER/user/chew/SERTools')#adding new directory for tools to import
 
 
+class PrismRigger():
+    def __init__(self):
+        pass
+
+    def uiWindow(self):
+        # checking for duplicate windows
+        windowID = 'PrismRigger'
+        if pm.window(windowID, exists=True):
+            pm.deleteUI(windowID)
+            pm.windowPref(windowID, remove=True)
+
+        # creating window
+        pm.window(windowID, title=u'Prism リガー', widthHeight=(600, 800))
+
+        # menu bar
+        menuBar = pm.menuBarLayout()
+        helpMenu = pm.menu(label=u'Help')
+        manualMenu = pm.menuItem(label=u'仕様書', parent=helpMenu, subMenu=True)#help
+
+
+    def importSkeleton(self):
+        pm.importFile
+        pass
+    def supBoneCreate(self):
+        pass
+    def createControls(self):
+        pass
+    def createRig(self):
+        pass
+    def exportWeights(self): #besides exporting the weights, copy them into memory so that the rigger can make slight bone shifting
+        pass
+    def importWeights(self): #copy from memory if the data exists, so slight bone shifts can be made
+        pass

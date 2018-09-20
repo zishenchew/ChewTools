@@ -1,0 +1,55 @@
+Character_HeadUp
+Character_Eye_L
+Character_Eye_R
+Character_Head fk 3 fk_Head
+Character_Neck fk 1.5 fk_Neck
+Character_LeftHandThumb3
+Character_LeftHandThumb2
+Character_LeftHandThumb1
+Character_LeftHandIndex3
+Character_LeftHandIndex2
+Character_LeftHandIndex1
+Character_LeftHandMiddle3
+Character_LeftHandMiddle2
+Character_LeftHandMiddle1
+Character_LeftHandRing3
+Character_LeftHandRing2
+Character_LeftHandRing1
+Character_LeftHandPinky3
+Character_LeftHandPinky2
+Character_LeftHandPinky1
+Character_LeftHand fkik 1.5 fk_Hand_Left ik_Hand_Left
+Character_LeftForeArm fkpv 1.75 fk_ForeArm_Left pv_Elbow_Left
+Character_LeftArm fk 2 fk_UpperArm_Left
+Character_LeftShoulder fk 2.5 fk_Shoulder_Left
+Character_RightHandThumb3
+Character_RightHandThumb2
+Character_RightHandThumb1
+Character_RightHandIndex3
+Character_RightHandIndex2
+Character_RightHandIndex1
+Character_RightHandMiddle3
+Character_RightHandMiddle2
+Character_RightHandMiddle1
+Character_RightHandRing3
+Character_RightHandRing2
+Character_RightHandRing1
+Character_RightHandPinky3
+Character_RightHandPinky2
+Character_RightHandPinky1
+Character_RightHand fkik 1.5 fk_Hand_Right ik_Hand_Right
+Character_RightForeArm fkpv 1.75 fk_ForeArm_Right pv_Elbow_Right
+Character_RightArm fk 2 fk_UpperArm_Right
+Character_RightShoulder fk 2.5 fk_Shoulder_Right
+Character_Spine2 fk 3 fk_Spine3
+Character_Spine1 fk 3 fk_Spine2
+Character_Spine fk 3 fk_Spine1
+Character_LeftToeBase fk 1 fk_Toe_Left
+Character_LeftFoot fkik 1.5 fk_Foot_Left ik_Foot_Left
+Character_LeftLeg fkpv 2 fk_Calf_Left pv_Knee_Left
+Character_LeftUpLeg fk 2 fk_Thigh_Left
+Character_RightToeBase fk 1 fk_Toe_Right
+Character_RightFoot fkik 1.5 fk_Foot_Right ik_Foot_Right
+Character_RightLeg fkpv 2 fk_Calf_Right pv_Knee_Right
+Character_RightUpLeg fk 2 fk_Thigh_Right
+Character_Hips fk 5 fk_Hip
