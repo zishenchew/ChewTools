@@ -66,13 +66,15 @@ class PrismRigger():
         pass
 
     def fkContr(self, contrName):#sub function for the create controls function
-        contr = pm.circle(nr=(1,0,0), r=float(self.jointController[contrName][1]))[0]
-        pm.rename(contr, self.jointController[contrName][2])  # renaming control
-        pm.xform(contr, t=pm.xform(contrName, ws=True, q=True, t=True),
+        contr = pm.circle(nr=(1,0,0), r=float(self.jointController[contrName][1]), name=self.jointController[contrName][2])[0]
+        grp = pm.group(contr, name=str(self.jointController[contrName][2] + '_grp'))
+        #pm.rename(contr, self.jointController[contrName][2])  # renaming control
+        pm.xform(grp, t=pm.xform(contrName, ws=True, q=True, t=True),
                  ro=pm.xform(contrName, ws=True, q=True, ro=True),
                  scale=(5, 5, 5))  # translate controller to appropriate position, scaling to 5
-        pm.makeIdentity(contr, apply=True, translate=True, scale=True, rotate=True)
-
+        #pm.setAttr(grp.translate, lock=True) #locking attributes
+        #pm.setAttr(grp.rotate, lock=True)
+        #pm.setAttr(grp.scale, lock=True)
         #pm.parent(self.jointController[contrName][2], self.jointController[str(pm.listRelatives(contrName, p=True)[0])][2])
 
 
@@ -87,6 +89,9 @@ class PrismRigger():
                 #creating IK controller
                 contr = mel.eval('curve -d 1 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 -0.5 -0.5 -p 0.5 -0.5 -0.5 -p 0.5 0.5 -0.5 -p -0.5 0.5 -0.5 -p -0.5 0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 -0.5 0.5 -p 0.5 -0.5 -0.5 -p -0.5 -0.5 -0.5 -p -0.5 -0.5 0.5 -p 0.5 -0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 0.5 0.5 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -n "controller1" ;')
                 contr = pm.rename(contr, self.jointController[i][3])#renaming control
+
+                grp = pm.group(contr, name=str(self.jointController[i][3] + '_grp'))
+
                 if 'Hand' in self.jointController[i][3]:
                     pm.xform(contr, t=pm.xform(i, ws=True, q=True, t=True),
                              ro=pm.xform(i, ws=True, q=True, ro=True),
@@ -136,28 +141,28 @@ class PrismRigger():
 
         #parenting FK controllers into correct hierarchy
         for i in self.jointController:
-            print i
+            #print i
             try:
-                pm.parent(self.jointController[i][2], self.jointController[str(pm.listRelatives(i, p=True)[0])][2])
+                pm.parent(str(self.jointController[i][2] + '_grp'), self.jointController[str(pm.listRelatives(i, p=True)[0])][2])
             except:
                 print('exception for hips')
                 pass
 
         #constraining all the requisite stuff
         #constraining the character bones to both the IK and FK bones
+        print self.jointController
         for i in pm.listRelatives('Character_Hips', type='joint', ad=True):
-            if i not in self.jointController:
+            if str(i) not in self.jointController:
+                print i
                 continue
-            elif len(self.jointController[i]) >= 4:
+
+            elif len(self.jointController[str(i)]) >= 4:
                 parConstr = pm.parentConstraint(i.replace('Character_', 'BoneFK_'), i.replace('Character_', 'BoneIK_'),
                                                 i, mo=False, w=1)
                 pm.setAttr(parConstr.getWeightAliasList()[-1], 0)
             else:
-                #print i
-                parConstr = pm.parentConstraint(i.replace('Character_', 'BoneFK_'), i, mo=False, w=1)
-                #pm.setAttr(parConstr.getWeightAliasList()[-1], 0)
-        parConstr = pm.parentConstraint('BoneFK_Hips', 'Character_Hips', mo=False, w=1)
-        pm.setAttr(parConstr.getWeightAliasList()[-1], 0)
+                pm.parentConstraint(i.replace('Character_', 'BoneFK_'), i, mo=False, w=1)
+        pm.parentConstraint('BoneFK_Hips', 'Character_Hips', mo=False, w=1)
 
     def exportWeights(self): #besides exporting the weights, copy them into memory so that the rigger can make slight bone shifting
         pass
@@ -173,9 +178,21 @@ class PrismPicker():
         pass
     def selectFunc(self):
         pass
-    def fkSwitch(self):
-        pass
-    def ikSwitch(self):
+    def fkikSwitch(self, dir):#fk switch to IK
+        pm.xform('pv_Elbow_%s' %dir, t=pm.xform('fk_ForeArm_%s' %dir, ws=True, q=True, t=True), ws=True)#moving the polevector to elbow
+        pm.xform('ik_Hand_%s' %dir, t=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, t=True), ro=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, ro=True), ws=True)#moving the hand IK to wrist
+
+    def ikfkSwitch(self, dir):
+        pm.xform('BoneFK_%sArm' %s, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
+                 ws=True) #setting the rotate for upper arm
+        pm.xform('BoneFK_%sForeArm' % s, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
+                 ws=True)
+        pm.xform('BoneFK_%sHand' % s, rotation=pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True),
+                 ws=True)
+        #pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True)
+        #pm.xform('Character_%sForeArm' % dir, rotation=True, q=True, ws=True)
+        #pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True)
+
         #try to use vectors to position the pole vector
         pass
     def importHumanIK(self):
