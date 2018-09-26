@@ -29,6 +29,8 @@ Attached is also a second class for the prismPicker
 
 import pymel.core as pm
 import maya.mel as mel
+from functools import partial
+
 #import os
 #import sys
 #sys.path.append('//p.sv/Prism/project/SER/user/chew/SERTools')#adding new directory for tools to import
@@ -93,13 +95,13 @@ class PrismRigger():
                 grp = pm.group(contr, name=str(self.jointController[i][3] + '_grp'))
 
                 if 'Hand' in self.jointController[i][3]:
-                    pm.xform(contr, t=pm.xform(i, ws=True, q=True, t=True),
+                    pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
                              ro=pm.xform(i, ws=True, q=True, ro=True),
                              ws=True,
                              scale=(5,5,5)) #translate controller to appropriate position, scaling to 5
                     pm.makeIdentity(contr, apply=True, translate=True, scale=True)
                 elif 'Foot' in self.jointController[i][3]:
-                    pm.xform(contr, t=pm.xform(i, ws=True, q=True, t=True),
+                    pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
                              ws=True,
                              scale=(10,10,10)) #translate controller to appropriate position, scaling to 5
                     #pm.setAttr(contr.ty, 0.5)
@@ -170,24 +172,203 @@ class PrismRigger():
         pass
 
 class PrismPicker():
+
     def __init__(self):
-        #detect the presence of a PrismRigger rig and identify
-        pass
+        # picker data will be written and stored under the MASTER controller (as an string attribute under the extra attributes)
+        # picker will search for and load the character picker data from the master controller upon initialisation
+
+        # there will be an option for adding additional characters into picker and then saving it into characters in scene if needed.
+
+        # detect the presence of a PrismRigger rig and identify
+
+        # this section will initialize and load the picker data from character
+
+        self.loadPicker()
+        self.pickerUI()
+        # execute buildpicker() with the first argument of the charaList
+
+        try:
+            for i in self.charaList:
+                pass
+            self.buildPicker(i)
+            print('pickerData', self.pickerData)  # for debugging purposes
+            print('charaList', self.charaList)  # for debugging purposes
+        except:
+            print('ORENDA rig not present')
+            pass
+
+
+    def loadPicker(self):
+
+        # check for list of charas under Master_Controller
+        if pm.ls('*Master_Controller'):
+            pickerDataName = [i for i in pm.listAttr('*Master_Controller') if 'PickerData' in i]
+        else:
+            pickerDataName = []
+        self.charaList = {}
+
+
+        for i in range(len(pickerDataName)):
+            self.charaList[pickerDataName[i].rstrip('_PickerData')] = pm.getAttr('*Master_Controller.%s' %pickerDataName[i])
+        '''
+        for i in pickerDataName:
+            self.charaList[i.rstrip('_PickerData')] = pm.getAttr('Master_Controller.%s' %pickerDataName[i])
+        '''
 
     def pickerUI(self):
+        # checking for duplicate windows
+        windowID = 'prismPicker'
+        if pm.window(windowID, exists=True):
+            pm.deleteUI(windowID)
+            pm.windowPref('primPicker', remove=True)
+
+        # creating window
+        pm.window(windowID, title=u'ORENDA アニメーションピッカー', widthHeight=(600, 800))
+
+        # menu bar
+        menuBar = pm.menuBarLayout()
+
+        # character
+        menuPicker = pm.menu(label=u'キャラ', parent=menuBar)
+        menuNew= pm.menuItem(label=u'新しいキャラ', parent=menuPicker, subMenu=False)
+        menuLoad = pm.menuItem(label=u'読み込む', parent=menuPicker, subMenu=False)
+
+        # edit
+        menuEdit = menuPicker = pm.menu(label=u'編集', parent=menuBar)
+        menuEditbutton = pm.menuItem(label=u'ピッカーを編集', parent=menuEdit, subMenu=False)
+        pm.menuItem(divider=True, parent=menuEdit, subMenu=False)
+        menuSave = pm.menuItem(label=u'保存', parent=menuEdit, subMenu=False)
+        menuDel = pm.menuItem(label=u'削除', parent=menuEdit, subMenu=False)
+
+
+        # label
+        self.masterCol = pm.columnLayout('master col', width=600)
+        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=550,
+                                          parent=self.masterCol)
+
+        # optionMenu
+        pickerListLayout = pm.rowLayout(parent=self.labelLayout, nc=10)
+        pm.text(label=u'キャラクター名：', width=85, align='right')
+        self.charaOptionMenu = pm.optionMenu(changeCommand=self.buildPicker, parent=pickerListLayout)
+        for i in self.charaList:
+            pm.menuItem(label=i, parent=self.charaOptionMenu)
+
+        # picker
+        # pickerLayout = pm.columnLayout(parent=self.masterCol)
+        pickerFrame = pm.frameLayout(label='test', bgc=(0,0,0), parent=self.masterCol, bv=0, backgroundShade=1, height=500, width=550, collapsable=0)
+        self.pickerLayout = pm.formLayout(numberOfDivisions=100, dgc=self.drag1, dpc=self.createButton)
+
+
+        '''
+        button1 = pm.iconTextButton(style='textOnly', bgc=(0,1,0), width=20, height=20)
+        button2 = pm.iconTextButton(style='textOnly', bgc=(1, 1, 0), width=20, height=20)
+
+        pm.formLayout(self.pickerLayout, edit=True,
+                      attachPosition=[(button1, 'left', 0, 5),
+                                      (button1, 'top', 0, 5),
+                                      (button2, 'left', 0, 50),
+                                      (button2, 'top', 0, 50)])
+        '''
+
+        pm.showWindow() # calls the window out
+        # pm.window(windowID, edit = True, widthHeight = (600,800))
+
+    def buildPicker(self, charaName):
+
+        # the format for the picker raw data should be
+        # ControllerName Width Height FromLeft FromTop Colour
+        # for a total of 6 items in the list
+        self.pickerData = {}
+
+        for i in self.charaList:
+            for j in self.charaList[i].split('\n'):
+                self.pickerData[j.split(' ')[0]] = j.lstrip(j.split(' ')[0] + ' ').split(' ')
+
+        '''
+        for i in dump.split('\n'):
+            self.pickerData[i.split(' ')[0]] = i.lstrip(i.split(' ')[0] + ' ').split(' ')
+        '''
+        #print self.pickerData[i][-1].split(',')[0]
+        print self.pickerData
+        print self.charaList
+        for i in self.pickerData:
+            pickerButton = pm.iconTextButton(i, style='textOnly',
+                              bgc=(float(self.pickerData[i][-1].split(',')[0]), float(self.pickerData[i][-1].split(',')[1]), float(self.pickerData[i][-1].split(',')[2])), #colour
+                              width=int(self.pickerData[i][0]),
+                              height=int(self.pickerData[i][1]),
+                                            command=partial(self.selectFunc, i),
+                                             parent=self.pickerLayout)
+
+            pm.formLayout(self.pickerLayout, edit=True,
+                          attachPosition=[(pickerButton, 'left', int(self.pickerData[i][2]), 0),
+                                          (pickerButton, 'top', int(self.pickerData[i][3]), 0)])
+
+    def drag1(self, *dra1):
+        # first function for creating a button
+        self.but1 = dra1 # storing the coordinates for the middle click input
+        print(dra1[-3], dra1[-2])
         pass
-    def selectFunc(self):
-        pass
+
+    def createButton(self, *dragControl):
+        # the rest of the function for creating a button is in this function
+        print(dragControl[-3], dragControl[-2])
+
+        if len(pm.ls(sl=True)) == 0:
+            return
+
+        colourInput = pm.confirmDialog(title=u'新しいボタン', message=u'ボタンの色を選んでください', button=[u'赤', u'青', u'緑', 'Cancel'], dismissString='Cancel', defaultButton='Cancel', cancelButton='Cancel')
+        if colourInput == u'赤':
+            colour = (1,0,0)
+        elif colourInput == u'緑':
+            colour = (0,1,0)
+        elif colourInput == u'青':
+            colour = (0,0,1)
+        else:
+            return
+
+        # fromLeft height will bet self.but1[0]
+        # fromTop height will bet self.but1[1]
+
+        createBut = pm.iconTextButton(pm.ls(sl=True)[0], style='textOnly',
+                                      bgc=colour,
+                                      width=(dragControl[-3] - int(self.but1[-3])),
+                                      height=(dragControl[-2] - int(self.but1[-2])),
+                                      command=partial(self.selectFunc, pm.ls(sl=True)),
+                                      parent=self.pickerLayout)
+
+        pm.formLayout(self.pickerLayout, edit=True,
+                      attachPosition=[(createBut, 'left', self.but1[-3], 0),
+                                      (createBut, 'top', self.but1[-2], 0)])
+
+        # gonna have to add the button data to the dictinary and store it in memory and then write a small section of logic to export it out into the format I set above
+        # the format for the picker raw data should be
+        # ControllerName Width Height FromLeft FromTop Colour
+
+        self.pickerData[str(pm.ls(sl=True)[0])] = [(dragControl[-3] - int(self.but1[-3])), (dragControl[-2] - int(self.but1[-2])), self.but1[-3], self.but1[-2], colour]
+        # print self.pickerData[pm.ls(sl=True)[0]]
+
+        print(self.pickerData)
+        self.saveToChar()
+
+    def selectFunc(self, target):
+        if pm.getModifiers() == 0:
+            pm.select(target)
+        elif pm.getModifiers() == 1:
+            pm.select(target, add=True)
+        elif pm.getModifiers() == 4:
+            pm.select(target, deselect=True)
+
     def fkikSwitch(self, dir):#fk switch to IK
         pm.xform('pv_Elbow_%s' %dir, t=pm.xform('fk_ForeArm_%s' %dir, ws=True, q=True, t=True), ws=True)#moving the polevector to elbow
         pm.xform('ik_Hand_%s' %dir, t=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, t=True), ro=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, ro=True), ws=True)#moving the hand IK to wrist
 
+    # IKFK switch needs more work. Leave it aside for now to work on other stuff
     def ikfkSwitch(self, dir):
-        pm.xform('BoneFK_%sArm' %s, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
+        pm.xform('fk_UpperArm_%s' %dir, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
                  ws=True) #setting the rotate for upper arm
-        pm.xform('BoneFK_%sForeArm' % s, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
+        pm.xform('fk_ForeArm_%s' %dir, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
                  ws=True)
-        pm.xform('BoneFK_%sHand' % s, rotation=pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True),
+        pm.xform('fk_Hand_%s' %dir, rotation=pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True),
                  ws=True)
         #pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True)
         #pm.xform('Character_%sForeArm' % dir, rotation=True, q=True, ws=True)
@@ -195,6 +376,50 @@ class PrismPicker():
 
         #try to use vectors to position the pole vector
         pass
+
     def importHumanIK(self):
         pass
 
+    def saveToChar(self, *save):
+        # dump the current buttons into a readable format onto the master controller of the main char as string attribute
+        saveData = '' # this is the string that is gonna be exported out
+        for i in self.pickerData:
+            saveData = str(saveData) + i + ' '
+            for dataContent in self.pickerData[i]:
+                if '(' in str(dataContent):
+                    saveData = saveData + str(dataContent).strip('(').strip(')').replace(', ', ',')
+                else:
+                    saveData = saveData + str(dataContent) + ' '
+            saveData = saveData + '\n'
+
+        saveData = saveData.replace(' \n', '\n')
+        print(saveData)
+        if save == 'new':
+            pm.addAttr('Master_Controller', ln='Test', dt='string')
+        elif save == 'export':
+            exportLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*syn) (*.syn)', fm=1)
+            expFile = open(exportLocation, 'w+')
+            expFile.write(saveData.rstrip('\n'))
+            expFile.close()
+        else:
+            if not '%s_PickerData' %pm.optionMenu(self.charaOptionMenu, value=True, q=True) in pm.listAttr('%s_Master_Controller' %pm.optionMenu(self.charaOptionMenu, value=True, q=True)):
+                pm.addAttr('%s_Master_Controller' % pm.optionMenu(self.charaOptionMenu, value=True, q=True))
+            pm.setAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)), saveData.rstrip('\n'))
+
+    def exportToFile(self):
+        # dump the current buttons into a readable format as an external file format to be importable later on
+        pass
+
+    def importFromFile(self):
+        # import the picker from an external file format previously written. Should be quite simple
+        importLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*syn) (*.syn)', fm=1)
+        impFile = open(importLocation, 'r')
+        impFile.read()
+        impFile.close()
+        self.charaList
+        pass
+
+    def deleteFromChar(self):
+        # delete the current picker data from character. Should be quite simple.
+        pm.deleteAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)))
+        pass
