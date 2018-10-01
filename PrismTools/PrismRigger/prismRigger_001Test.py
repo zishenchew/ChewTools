@@ -174,6 +174,14 @@ class PrismRigger():
 class PrismPicker():
 
     def __init__(self):
+        # declaring all attributes to be used
+        self.editMode = False
+
+        if pm.ls('SynopticNode', type='condition'): # defining the synoptic node that all data will be read from and written under
+            self.synopticNode = pm.ls('SynopticNode', type='condition')[0]
+        else:
+            self.synopticNode = pm.shadingNode('condition', asUtility=True, name='SypnoticNode')
+        
         # picker data will be written and stored under the MASTER controller (as an string attribute under the extra attributes)
         # picker will search for and load the character picker data from the master controller upon initialisation
 
@@ -188,14 +196,13 @@ class PrismPicker():
         # execute buildpicker() with the first argument of the charaList
 
         try:
-            for i in self.charaList:
+            for i in self.charaListDump:
                 pass
             self.buildPicker(i)
-            print('pickerData', self.pickerData)  # for debugging purposes
-            print('charaList', self.charaList)  # for debugging purposes
+            #print('pickerData', self.pickerData)  # for debugging purposes
+            #print('charaList', self.charaListDump)  # for debugging purposes
         except:
             print('ORENDA rig not present')
-            pass
 
 
     def loadPicker(self):
@@ -205,14 +212,14 @@ class PrismPicker():
             pickerDataName = [i for i in pm.listAttr('*Master_Controller') if 'PickerData' in i]
         else:
             pickerDataName = []
-        self.charaList = {}
+        self.charaListDump = {}
 
 
         for i in range(len(pickerDataName)):
-            self.charaList[pickerDataName[i].rstrip('_PickerData')] = pm.getAttr('*Master_Controller.%s' %pickerDataName[i])
+            self.charaListDump[pickerDataName[i].rstrip('_PickerData')] = pm.getAttr('*Master_Controller.%s' %pickerDataName[i])
         '''
         for i in pickerDataName:
-            self.charaList[i.rstrip('_PickerData')] = pm.getAttr('Master_Controller.%s' %pickerDataName[i])
+            self.charaListDump[i.rstrip('_PickerData')] = pm.getAttr('Master_Controller.%s' %pickerDataName[i])
         '''
 
     def pickerUI(self):
@@ -223,7 +230,7 @@ class PrismPicker():
             pm.windowPref('primPicker', remove=True)
 
         # creating window
-        pm.window(windowID, title=u'ORENDA アニメーションピッカー', widthHeight=(600, 800))
+        pm.window(windowID, title='ORENDA Synoptic', widthHeight=(600, 800))
 
         # menu bar
         menuBar = pm.menuBarLayout()
@@ -231,31 +238,44 @@ class PrismPicker():
         # character
         menuPicker = pm.menu(label=u'キャラ', parent=menuBar)
         menuNew= pm.menuItem(label=u'新しいキャラ', parent=menuPicker, subMenu=False)
-        menuLoad = pm.menuItem(label=u'読み込む', parent=menuPicker, subMenu=False)
+        menuLoad = pm.menuItem(label=u'読み込む', parent=menuPicker, subMenu=False, command=self.importFromFile)
 
         # edit
         menuEdit = menuPicker = pm.menu(label=u'編集', parent=menuBar)
-        menuEditbutton = pm.menuItem(label=u'ピッカーを編集', parent=menuEdit, subMenu=False)
+
+        self.menuEditButton = pm.menuItem(label=u'Synopticを編集', parent=menuEdit, subMenu=False, command=self.editModeSwitch)
         pm.menuItem(divider=True, parent=menuEdit, subMenu=False)
-        menuSave = pm.menuItem(label=u'保存', parent=menuEdit, subMenu=False)
-        menuDel = pm.menuItem(label=u'削除', parent=menuEdit, subMenu=False)
+        self.menuSave = pm.menuItem(label=u'保存', parent=menuEdit, subMenu=False, command=partial(self.saveToChar, 'export'))
+        self.menuDel = pm.menuItem(label=u'削除', parent=menuEdit, subMenu=False, command=self.deleteFromChar)
 
 
         # label
         self.masterCol = pm.columnLayout('master col', width=600)
-        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=550,
+        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=590,
                                           parent=self.masterCol)
 
         # optionMenu
         pickerListLayout = pm.rowLayout(parent=self.labelLayout, nc=10)
         pm.text(label=u'キャラクター名：', width=85, align='right')
         self.charaOptionMenu = pm.optionMenu(changeCommand=self.buildPicker, parent=pickerListLayout)
-        for i in self.charaList:
-            pm.menuItem(label=i, parent=self.charaOptionMenu)
+        for i in self.charaListDump:
+            pm.menuItem(i, label=i, parent=self.charaOptionMenu)
+
+        # button layout
+        pickerLayout = pm.columnLayout(parent=self.masterCol)
+        self.buttonLayout = pm.rowLayout(parent=pickerLayout, nc=10)
+        # buttons
+        pm.button('overwritePicker', label=u'保存する', command=self.saveToChar, parent=self.buttonLayout)
+
 
         # picker
         # pickerLayout = pm.columnLayout(parent=self.masterCol)
-        pickerFrame = pm.frameLayout(label='test', bgc=(0,0,0), parent=self.masterCol, bv=0, backgroundShade=1, height=500, width=550, collapsable=0)
+        self.pickerFrame = pm.frameLayout(label='Synoptic', bgc=(0, 0, 0), parent=self.masterCol, bv=0, backgroundShade=1, height=500, width=590, collapsable=0)
+        
+
+
+
+
         self.pickerLayout = pm.formLayout(numberOfDivisions=100, dgc=self.drag1, dpc=self.createButton)
 
 
@@ -279,20 +299,29 @@ class PrismPicker():
         # ControllerName Width Height FromLeft FromTop Colour
         # for a total of 6 items in the list
         self.pickerData = {}
+        # delete the all the children of the layout to make space
 
-        for i in self.charaList:
-            for j in self.charaList[i].split('\n'):
-                self.pickerData[j.split(' ')[0]] = j.lstrip(j.split(' ')[0] + ' ').split(' ')
+        # rebuilding
+
+
+        # clearing UI for rebuilding
+        for i in pm.lsUI(type='iconTextButton'):
+            if 'button_' in i:
+                print i
+                pm.deleteUI(i)
+
+        for j in self.charaListDump[charaName].split('\n'):
+            self.pickerData[j.split(' ')[0]] = j.lstrip(j.split(' ')[0] + ' ').split(' ')
 
         '''
         for i in dump.split('\n'):
             self.pickerData[i.split(' ')[0]] = i.lstrip(i.split(' ')[0] + ' ').split(' ')
         '''
         #print self.pickerData[i][-1].split(',')[0]
-        print self.pickerData
-        print self.charaList
+        #print self.pickerData
+        #print self.charaListDump
         for i in self.pickerData:
-            pickerButton = pm.iconTextButton(i, style='textOnly',
+            pickerButton = pm.iconTextButton('button_' + i, style='textOnly',
                               bgc=(float(self.pickerData[i][-1].split(',')[0]), float(self.pickerData[i][-1].split(',')[1]), float(self.pickerData[i][-1].split(',')[2])), #colour
                               width=int(self.pickerData[i][0]),
                               height=int(self.pickerData[i][1]),
@@ -310,6 +339,11 @@ class PrismPicker():
         pass
 
     def createButton(self, *dragControl):
+
+        # perform a check to see if edit mode is on. if not, then function will not work.
+        if self.editMode == False:
+            return
+
         # the rest of the function for creating a button is in this function
         print(dragControl[-3], dragControl[-2])
 
@@ -348,7 +382,10 @@ class PrismPicker():
         # print self.pickerData[pm.ls(sl=True)[0]]
 
         print(self.pickerData)
-        self.saveToChar()
+        #self.saveToChar(False)
+
+    def deleteButton(self, buttonName):
+        pass
 
     def selectFunc(self, target):
         if pm.getModifiers() == 0:
@@ -380,7 +417,7 @@ class PrismPicker():
     def importHumanIK(self):
         pass
 
-    def saveToChar(self, *save):
+    def saveToChar(self, mayaFalse, *save):
         # dump the current buttons into a readable format onto the master controller of the main char as string attribute
         saveData = '' # this is the string that is gonna be exported out
         for i in self.pickerData:
@@ -401,25 +438,70 @@ class PrismPicker():
             expFile = open(exportLocation, 'w+')
             expFile.write(saveData.rstrip('\n'))
             expFile.close()
+
+        elif save == 'node':
+            # create a condition node that is attached to the master controller and store all the data there.
+            # if there is no master controller, the node will be created as a separate floating object? so that the tool can be used for non prism rigs
+            pm.shadingNode('condition', asUtility=True, name='SypnoticNode')
+            pass
+
         else:
             if not '%s_PickerData' %pm.optionMenu(self.charaOptionMenu, value=True, q=True) in pm.listAttr('%s_Master_Controller' %pm.optionMenu(self.charaOptionMenu, value=True, q=True)):
                 pm.addAttr('%s_Master_Controller' % pm.optionMenu(self.charaOptionMenu, value=True, q=True))
             pm.setAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)), saveData.rstrip('\n'))
 
-    def exportToFile(self):
-        # dump the current buttons into a readable format as an external file format to be importable later on
-        pass
-
-    def importFromFile(self):
+    def importFromFile(self, mayaFalse):
         # import the picker from an external file format previously written. Should be quite simple
-        importLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*syn) (*.syn)', fm=1)
-        impFile = open(importLocation, 'r')
-        impFile.read()
-        impFile.close()
-        self.charaList
-        pass
 
-    def deleteFromChar(self):
+        importLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*txt) (*.txt)', fm=1)
+        if importLocation == None: # in case the user closes the file dialog without selecting anything
+            return
+        print importLocation
+        impFile = open(importLocation[0], 'r')
+        charaName = importLocation[0].split('/')[-1].rstrip('.txt')
+        self.charaListDump[charaName] = impFile.read()
+        impFile.close()
+
+        # this part checks if charaListDump has any new characters that are not added onto the list and adds them.
+        for i in self.charaListDump:
+            if i in pm.optionMenu(self.charaOptionMenu, q=True, itemListShort=True):
+                continue
+
+            pm.menuItem(i, label=i, parent=self.charaOptionMenu)
+        self.buildPicker(charaName)
+        '''
+        except:
+            self.errorDialog()
+        '''
+
+    def deleteFromChar(self, mayaFalse):
         # delete the current picker data from character. Should be quite simple.
-        pm.deleteAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)))
+        try:
+            pm.deleteAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)))
+        except:
+            self.errorDialog()
+
+    def editModeSwitch(self, mayaFalse):
+        if self.editMode == False:
+            self.editMode = True
+        elif self.editMode == True:
+            self.editMode = False
+
+        if self.editMode == True:
+            pm.frameLayout(self.pickerFrame, e=True, bgc=(1, 1, 0), label=u'編集モード') # changing the frame colour of the picker header
+            for i in pm.lsUI(type='iconTextButton'): #changing command to delete button
+                if 'button_' in i:
+                    pm.iconTextButton(i, e=True, command=partial(self.deleteButton, i))
+
+        if self.editMode == False:
+            pm.frameLayout(self.pickerFrame, e=True, bgc=(0, 0, 0), label='Synoptic')  # changing the frame colour of the picker header
+            for i in pm.lsUI(type='iconTextButton'):
+                if 'button_' in i:
+                    pm.iconTextButton(i, e=True, command=partial(self.selectFunc, pm.ls(sl=True)))
+
+    def errorDialog(self, mayaFalse, *arg):
+        # create additional confirm dialogs based on arguments given
+        pm.confirmDialog(message=u'エラーです', title=u'ORENDA Synoptic')
+
+    def renameChara(self):
         pass
