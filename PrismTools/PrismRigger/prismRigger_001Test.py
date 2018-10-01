@@ -177,10 +177,13 @@ class PrismPicker():
         # declaring all attributes to be used
         self.editMode = False
 
-        if pm.ls('SynopticNode', type='condition'): # defining the synoptic node that all data will be read from and written under
-            self.synopticNode = pm.ls('SynopticNode', type='condition')[0]
+        if pm.ls('SynopticNode', type='transform'): # defining the synoptic node that all data will be read from and written under
+            self.synopticNode = pm.ls('SynopticNode', type='transform')[0]
         else:
-            self.synopticNode = pm.shadingNode('condition', asUtility=True, name='SypnoticNode')
+            pass
+            # create node only when user attempts to save. This is to reduce unwanted garbage nodes from building up.
+            # self.synopticNode = pm.shadingNode('condition', asUtility=True, name='SypnoticNode')
+
         
         # picker data will be written and stored under the MASTER controller (as an string attribute under the extra attributes)
         # picker will search for and load the character picker data from the master controller upon initialisation
@@ -208,15 +211,16 @@ class PrismPicker():
     def loadPicker(self):
 
         # check for list of charas under Master_Controller
-        if pm.ls('*Master_Controller'):
-            pickerDataName = [i for i in pm.listAttr('*Master_Controller') if 'PickerData' in i]
+
+        if pm.ls('SynopticNode'):
+            pickerDataName = [i for i in pm.listAttr(self.synopticNode) if 'PickerData' in i]
         else:
             pickerDataName = []
         self.charaListDump = {}
 
 
         for i in range(len(pickerDataName)):
-            self.charaListDump[pickerDataName[i].rstrip('_PickerData')] = pm.getAttr('*Master_Controller.%s' %pickerDataName[i])
+            self.charaListDump[pickerDataName[i].rstrip('_PickerData')] = pm.getAttr(self.synopticNode+'.%s' %pickerDataName[i])
         '''
         for i in pickerDataName:
             self.charaListDump[i.rstrip('_PickerData')] = pm.getAttr('Master_Controller.%s' %pickerDataName[i])
@@ -310,8 +314,11 @@ class PrismPicker():
                 print i
                 pm.deleteUI(i)
 
-        for j in self.charaListDump[charaName].split('\n'):
-            self.pickerData[j.split(' ')[0]] = j.lstrip(j.split(' ')[0] + ' ').split(' ')
+        try:
+            for j in self.charaListDump[charaName].split('\n'):
+                self.pickerData[j.split(' ')[0]] = j.lstrip(j.split(' ')[0] + ' ').split(' ')
+        except:
+            pass
 
         '''
         for i in dump.split('\n'):
@@ -419,6 +426,18 @@ class PrismPicker():
 
     def saveToChar(self, mayaFalse, *save):
         # dump the current buttons into a readable format onto the master controller of the main char as string attribute
+        if not pm.ls('SynopticNode', type='transform'): #creating synoptic node if it doesn't already exist
+            self.synopticNode = pm.group(name='SynopticNode')
+            pm.promptDialog(title=u'キャラ名前',
+                            message=u'キャラクターを書いてください',
+                            button=['OK', 'Cancel'],
+                            defaultButton='OK',
+                            cancelButton='Cancel',
+                            dismissString='Cancel')
+            pm.addAttr(self.synopticNode, ln=pm.promptDialog(q=True, text=True) + '_PickerData', dt='string')
+            self.loadPicker()
+            self.buildPicker(pm.promptDialog(q=True, text=True) + '_PickerData')
+            return
         saveData = '' # this is the string that is gonna be exported out
         for i in self.pickerData:
             saveData = str(saveData) + i + ' '
@@ -432,7 +451,8 @@ class PrismPicker():
         saveData = saveData.replace(' \n', '\n')
         print(saveData)
         if save == 'new':
-            pm.addAttr('Master_Controller', ln='Test', dt='string')
+
+            pm.addAttr(self.synopticNode, ln='Test', dt='string')
         elif save == 'export':
             exportLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*syn) (*.syn)', fm=1)
             expFile = open(exportLocation, 'w+')
