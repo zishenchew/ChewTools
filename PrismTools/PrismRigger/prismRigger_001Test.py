@@ -210,8 +210,7 @@ class PrismPicker():
 
     def loadPicker(self):
 
-        # check for list of charas under Master_Controller
-
+        # check for list of charas under SynopticNode
         if pm.ls('SynopticNode'):
             pickerDataName = [i for i in pm.listAttr(self.synopticNode) if 'PickerData' in i]
         else:
@@ -229,9 +228,10 @@ class PrismPicker():
     def pickerUI(self):
         # checking for duplicate windows
         windowID = 'prismPicker'
+
         if pm.window(windowID, exists=True):
             pm.deleteUI(windowID)
-            pm.windowPref('primPicker', remove=True)
+            pm.windowPref('prismPicker', remove=True)
 
         # creating window
         pm.window(windowID, title='ORENDA Synoptic', widthHeight=(600, 800))
@@ -269,8 +269,10 @@ class PrismPicker():
         pickerLayout = pm.columnLayout(parent=self.masterCol)
         self.buttonLayout = pm.rowLayout(parent=pickerLayout, nc=10)
         # buttons
+        pm.text(' ', width=85)
+        pm.button('newChara', label=u'新しいキャラクター', command=self.saveToChar, parent=self.buttonLayout)
         pm.button('overwritePicker', label=u'保存する', command=self.saveToChar, parent=self.buttonLayout)
-
+        pm.button('export', label=u'書き出す', command=partial(self.saveToChar, 'export'), parent=self.buttonLayout)
 
         # picker
         # pickerLayout = pm.columnLayout(parent=self.masterCol)
@@ -282,6 +284,7 @@ class PrismPicker():
 
         self.pickerLayout = pm.formLayout(numberOfDivisions=100, dgc=self.drag1, dpc=self.createButton)
 
+        pm.image(image=r'D:\ChewTools\PrismTools\PrismRigger\BG_Base.png')
 
         '''
         button1 = pm.iconTextButton(style='textOnly', bgc=(0,1,0), width=20, height=20)
@@ -436,8 +439,12 @@ class PrismPicker():
                             dismissString='Cancel')
             pm.addAttr(self.synopticNode, ln=pm.promptDialog(q=True, text=True) + '_PickerData', dt='string')
             self.loadPicker()
-            self.buildPicker(pm.promptDialog(q=True, text=True) + '_PickerData')
+            self.pickerUI()
+            #self.buildPicker(pm.promptDialog(q=True, text=True) + '_PickerData')
+            #print 'charaListDump is ' + str(self.charaListDump)
+            #pm.optionMenu(self.charaOptionMenu, e=True, value=pm.promptDialog(q=True, text=True))
             return
+
         saveData = '' # this is the string that is gonna be exported out
         for i in self.pickerData:
             saveData = str(saveData) + i + ' '
@@ -451,24 +458,37 @@ class PrismPicker():
         saveData = saveData.replace(' \n', '\n')
         print(saveData)
         if save == 'new':
-
-            pm.addAttr(self.synopticNode, ln='Test', dt='string')
+            pm.promptDialog(title=u'キャラ名前',
+                            message=u'キャラクターを書いてください',
+                            button=['OK', 'Cancel'],
+                            defaultButton='OK',
+                            cancelButton='Cancel',
+                            dismissString='Cancel')
+            pm.addAttr(self.synopticNode, ln=pm.promptDialog(q=True, text=True) + '_PickerData', dt='string')
+            self.loadPicker()
+            self.pickerUI()
+            #pm.addAttr(self.synopticNode, ln='Test', dt='string') delete later after it runs
         elif save == 'export':
             exportLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*syn) (*.syn)', fm=1)
             expFile = open(exportLocation, 'w+')
             expFile.write(saveData.rstrip('\n'))
             expFile.close()
 
+        ''' Can be deprecated 
         elif save == 'node':
             # create a condition node that is attached to the master controller and store all the data there.
             # if there is no master controller, the node will be created as a separate floating object? so that the tool can be used for non prism rigs
             pm.shadingNode('condition', asUtility=True, name='SypnoticNode')
             pass
+        '''
 
-        else:
+        # the overwrite function can be deprecated since overwriting is automatic.
+        '''
+        else: # overwriting
             if not '%s_PickerData' %pm.optionMenu(self.charaOptionMenu, value=True, q=True) in pm.listAttr('%s_Master_Controller' %pm.optionMenu(self.charaOptionMenu, value=True, q=True)):
                 pm.addAttr('%s_Master_Controller' % pm.optionMenu(self.charaOptionMenu, value=True, q=True))
             pm.setAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)), saveData.rstrip('\n'))
+        '''
 
     def importFromFile(self, mayaFalse):
         # import the picker from an external file format previously written. Should be quite simple

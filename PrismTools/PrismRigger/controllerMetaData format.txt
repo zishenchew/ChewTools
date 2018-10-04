@@ -1,0 +1,6 @@
+ControllerName Width Height FromLeft FromTop Colour
+fk_UpperArm_Left 10 10 30 5 1,0,0
+fk_ForeArm_Left 10 10 20 5 1,0,0
+fk_Hand_Left 10 10 10 5 1,0,0
+pv_Elbow_Left 10 10 25 15 0,1,0
+ik_Hand_Left 10 10 10 15 0,1,0

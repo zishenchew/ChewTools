@@ -23,6 +23,7 @@ Tool explanation:
 ########################################################################################################################
 '''
 import pymel.core as pm
+import maya.OpenMayaAnim as animAPI
 
 def HIK_mirror(*mayaFalse):
     transBuffer = {} #creating a dictionary do use as a buffer to store all the transform values. The dictionary will
@@ -38,7 +39,7 @@ def HIK_mirror(*mayaFalse):
             #print 'rotate'
             transBuffer[i] = [None, pm.xform(i, q=True, ro=True)]
             
-            
+
     for i in transBuffer:
         #print i
         if transBuffer[i][0] != None and transBuffer[i][1] != None:#if a null value is inserted into where the translate data is supposed to be, it will only execute a rotation
@@ -101,7 +102,10 @@ def HIK_mirror(*mayaFalse):
         pm.xform(pm.ls(sl=True)[0], q=True, ro=True)
         '''
         pm.setKeyframe(pm.listRelatives(pm.ls('Character1_Ctrl_Reference')[0], ad=True, type='transform'))
-        
+
+        for i in transBuffer:
+            print i
+
 def HIK_partial_mirror(*mayaFalse):
     try:
         transBuffer = {} #creating a dictionary do use as a buffer to store all the transform values. The dictionary will
@@ -182,3 +186,8 @@ def HIK_partial_mirror(*mayaFalse):
             pm.setKeyframe(pm.listRelatives(pm.ls('Character1_Ctrl_Reference')[0], ad=True, type='transform'))
     except:
         pm.confirmDialog(title=u'NAVY 反転', message=u'選択してください')
+
+def HIK_mirrorTimeline(*mayaFalse):
+    for t in range(int(animAPI.MAnimControl.minTime().value()), int(animAPI.MAnimControl.maxTime().value()) +1):
+        pm.currentTime(t)
+        HIK_mirror()
