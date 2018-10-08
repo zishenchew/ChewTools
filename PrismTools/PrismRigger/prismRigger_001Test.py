@@ -297,6 +297,16 @@ class PrismPicker():
                                       (button2, 'top', 0, 50)])
         '''
 
+        # bottom buttons
+        self.bottomButtonLayout = pm.rowLayout(parent=self.masterCol, nc=10)
+        pm.text(' ', width=40, parent=self.bottomButtonLayout)
+        pm.button('selectAll', label=u'全部を選択する', parent=self.bottomButtonLayout, width=100, command=self.selectAll)
+        pm.text(' ', width=10, parent=self.bottomButtonLayout)
+        pm.button('fkik', label=u'IKに差し替え', parent=self.bottomButtonLayout, width=70, command=self.fkikSwitch)
+        pm.text(' ', width=10, parent=self.bottomButtonLayout)
+        pm.button('ikfk', label=u'FKに差し替え', parent=self.bottomButtonLayout, width=70, command=self.ikfkSwitch)
+
+
         pm.showWindow() # calls the window out
         # pm.window(windowID, edit = True, widthHeight = (600,800))
 
@@ -392,7 +402,7 @@ class PrismPicker():
         # print self.pickerData[pm.ls(sl=True)[0]]
 
         print(self.pickerData)
-        #self.saveToChar(False)
+        self.saveToChar(False)
 
     def deleteButton(self, buttonName):
         pass
@@ -405,12 +415,26 @@ class PrismPicker():
         elif pm.getModifiers() == 4:
             pm.select(target, deselect=True)
 
+    def selectAll(self, mayaFalse):
+        if pm.getModifiers() == 0: # no modifiers
+            pm.select(clear=True)
+            pm.select(self.pickerData)
+        elif pm.getModifiers() == 1: # shift is held down
+            pm.select(self.pickerData, add=True)
+        elif pm.getModifiers() == 4: #ctrl is held down
+            pm.select(self.pickerData, deselect=True)
+        pass
+
     def fkikSwitch(self, dir):#fk switch to IK
+        pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
+        return
         pm.xform('pv_Elbow_%s' %dir, t=pm.xform('fk_ForeArm_%s' %dir, ws=True, q=True, t=True), ws=True)#moving the polevector to elbow
         pm.xform('ik_Hand_%s' %dir, t=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, t=True), ro=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, ro=True), ws=True)#moving the hand IK to wrist
 
     # IKFK switch needs more work. Leave it aside for now to work on other stuff
     def ikfkSwitch(self, dir):
+        pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
+        return
         pm.xform('fk_UpperArm_%s' %dir, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
                  ws=True) #setting the rotate for upper arm
         pm.xform('fk_ForeArm_%s' %dir, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
@@ -474,6 +498,16 @@ class PrismPicker():
             expFile.write(saveData.rstrip('\n'))
             expFile.close()
 
+        # the overwrite function can be deprecated since overwriting is automatic.
+
+        # overwrite
+        else:
+            '''
+            if not '%s_PickerData' %pm.optionMenu(self.charaOptionMenu, value=True, q=True) in pm.listAttr('%s_Master_Controller' %pm.optionMenu(self.charaOptionMenu, value=True, q=True)):
+                pm.addAttr('%s_Master_Controller' % pm.optionMenu(self.charaOptionMenu, value=True, q=True))
+            '''
+            pm.setAttr('%s.%s_PickerData' %(self.synopticNode, pm.optionMenu(self.charaOptionMenu, value=True, q=True)), saveData.rstrip('\n').lstrip(' ').lstrip('\n'))
+
         ''' Can be deprecated 
         elif save == 'node':
             # create a condition node that is attached to the master controller and store all the data there.
@@ -482,13 +516,6 @@ class PrismPicker():
             pass
         '''
 
-        # the overwrite function can be deprecated since overwriting is automatic.
-        '''
-        else: # overwriting
-            if not '%s_PickerData' %pm.optionMenu(self.charaOptionMenu, value=True, q=True) in pm.listAttr('%s_Master_Controller' %pm.optionMenu(self.charaOptionMenu, value=True, q=True)):
-                pm.addAttr('%s_Master_Controller' % pm.optionMenu(self.charaOptionMenu, value=True, q=True))
-            pm.setAttr('%s_Master_Controller.%s_PickerData' %(pm.optionMenu(self.charaOptionMenu, value=True, q=True),pm.optionMenu(self.charaOptionMenu, value=True, q=True)), saveData.rstrip('\n'))
-        '''
 
     def importFromFile(self, mayaFalse):
         # import the picker from an external file format previously written. Should be quite simple
