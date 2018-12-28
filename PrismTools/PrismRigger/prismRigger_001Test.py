@@ -61,6 +61,10 @@ class PrismRigger():
         manualMenu = pm.menuItem(label=u'仕様書', parent=helpMenu, subMenu=True)#help
 
 
+
+        pm.showWindow()
+
+
     def importSkeleton(self):
         pm.importFile('D:\ChewTools\PrismTools\PrismRigger\Joint.ma')
         pass
@@ -170,6 +174,31 @@ class PrismRigger():
         pass
     def importWeights(self): #copy from memory if the data exists, so slight bone shifts can be made
         pass
+
+    '''
+    1. use the translate X output of the bones and connect it to a sum node to get the full length of the legs.
+    2. for some reason, the sum of the arms and legs are sent into a divide node (output is leg length divided by arm length), then the resulting output is sent into the another multiply node 
+    to be multiplied with the softness value. 
+    FIGURED IT OUT
+    the reason the leg length was divided by the arm length is simply to obtain an arbitrary non zero and >1 number that would serve as a multiplier for the softness.
+    
+    3. then just add a bigger than 0 conditional to switch on and off the scaling and apply the following formula
+    x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
+    
+    
+    //腕
+    float $sof_ude_l = condition_ude_softness_l.outColorR;
+    float $dis_ude_l = distanceBetween_ude_l.distance;
+    float $disSub_ude_l = plusMinusAverage_ude_factDist_Sub_l.output3Dx;
+    multiplyDivide_ude_smartRatio_l.input1X = $sof_ude_l*( 1-exp(-1*($dis_ude_l-$disSub_ude_l)/$sof_ude_l) )+ $disSub_ude_l;
+
+    //脚
+    float $sof_ashi_l = condition_ashi_softness_l.outColorR; softness
+    float $dis_ashi_l = distanceBetween_ashi_l.distance; length of leg
+    float $disSub_ashi_l = plusMinusAverage_ashi_factDist_Sub_l.output3Dx; arbitrary ratio between leg and arm
+    multiplyDivide_ashi_smartRatio_l.input1X = $sof_ashi_l*( 1-exp(-1*($dis_ashi_l-$disSub_ashi_l)/$sof_ashi_l) )+ $disSub_ashi_l;
+    x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
+    '''
 
 class PrismPicker():
 
@@ -382,17 +411,20 @@ class PrismPicker():
 
         # fromLeft height will bet self.but1[0]
         # fromTop height will bet self.but1[1]
+        try:
+            createBut = pm.iconTextButton(pm.ls(sl=True)[0], style='textOnly',
+                                          bgc=colour,
+                                          width=(dragControl[-3] - int(self.but1[-3])),
+                                          height=(dragControl[-2] - int(self.but1[-2])),
+                                          command=partial(self.selectFunc, pm.ls(sl=True)),
+                                          parent=self.pickerLayout)
+            pm.formLayout(self.pickerLayout, edit=True,
+                          attachPosition=[(createBut, 'left', self.but1[-3], 0),
+                                          (createBut, 'top', self.but1[-2], 0)])
 
-        createBut = pm.iconTextButton(pm.ls(sl=True)[0], style='textOnly',
-                                      bgc=colour,
-                                      width=(dragControl[-3] - int(self.but1[-3])),
-                                      height=(dragControl[-2] - int(self.but1[-2])),
-                                      command=partial(self.selectFunc, pm.ls(sl=True)),
-                                      parent=self.pickerLayout)
+        except:
+            pm.confirmDialog(title='ORENDA  picker', message=u'そのコントローラーも登録しました。。')
 
-        pm.formLayout(self.pickerLayout, edit=True,
-                      attachPosition=[(createBut, 'left', self.but1[-3], 0),
-                                      (createBut, 'top', self.but1[-2], 0)])
 
         # gonna have to add the button data to the dictinary and store it in memory and then write a small section of logic to export it out into the format I set above
         # the format for the picker raw data should be

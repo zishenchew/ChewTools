@@ -17,7 +17,7 @@ reload(Prism_AdvSkeExporter)
 
 #import maya.OpenMayaAnim as animAPI
 #import maya.OpenMaya as om
-mel.eval('source "//p.sv/Tool/PrismTools/AdvancedSkeleton5";')
+mel.eval('source "//p.sv/Tool/Advanced_Skeleton/AdvancedSkeleton5";')
 
 def PrismTools_UI():
     #PrismTools UI dimension
@@ -52,13 +52,13 @@ def PrismTools_UI():
                       width = 75)
     picker_button = partial(mel.eval, 'source "//p.sv/Tool/PrismTools/AdvancedSkeleton5Files/Selector/biped.mel"')
     pm.iconTextButton(style='iconAndTextVertical',
-                      image1=r'\\p.sv\Tool\PrismTools\AdvancedSkeleton5Files\icons\asBiped.png', label='Picker',
+                      image1=r'\\p.sv\Tool\PrismTools\AdvancedSkeleton5Files\icons\asBiped.png', label=u'Picker(仮）',
                       parent=ASRow,
                       command = picker_button,
                       width = 50)
     face_button = partial(mel.eval, 'source "//p.sv/Tool/PrismTools/AdvancedSkeleton5Files/Selector/face.mel"')
     pm.iconTextButton(style='iconAndTextVertical',
-                      image1=r'\\p.sv\Tool\PrismTools\AdvancedSkeleton5Files\icons\asFace.png', label='Picker',
+                      image1=r'\\p.sv\Tool\PrismTools\AdvancedSkeleton5Files\icons\asFace.png', label=u'Picker(仮）',
                       parent=ASRow,
                       command = face_button,
                       width = 50)
