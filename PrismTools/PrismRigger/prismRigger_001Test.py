@@ -103,13 +103,19 @@ class PrismRigger():
                              ro=pm.xform(i, ws=True, q=True, ro=True),
                              ws=True,
                              scale=(5,5,5)) #translate controller to appropriate position, scaling to 5
-                    pm.makeIdentity(contr, apply=True, translate=True, scale=True)
+                    #pm.makeIdentity(contr, apply=True, translate=True, scale=True)
+                    pm.parent(contr, world=True, absolute=True)
+                    pm.delete(grp)
+                    pm.makeIdentity(contr, apply=True, translate=True, rotate=True, scale=True)
                 elif 'Foot' in self.jointController[i][3]:
                     pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
                              ws=True,
                              scale=(10,10,10)) #translate controller to appropriate position, scaling to 5
                     #pm.setAttr(contr.ty, 0.5)
-                    pm.makeIdentity(contr, apply=True, translate=True, scale=True)
+                    #pm.makeIdentity(contr, apply=True, translate=True, scale=True)
+                    pm.parent(contr, world=True, absolute=True)
+                    pm.delete(grp)
+                    pm.makeIdentity(contr, apply=True, translate=True, rotate=True, scale=True)
                 self.fkContr(i)
 
             if self.jointController[i][0] == 'fkpv':
@@ -131,12 +137,16 @@ class PrismRigger():
 
         #create IK chains
         ikLegL = pm.ikHandle(sj='BoneIK_LeftUpLeg', ee='BoneIK_LeftFoot', solver='ikRPsolver', name='ikHandle_Leg_Left')[0]
+        ikFootL = pm.ikHandle(sj='BoneIK_LeftFoot', ee='BoneIK_LeftToeBase', solver='ikSCsolver', name='ikHandle_Foot_Left')[0]
         ikArmL = pm.ikHandle(sj='BoneIK_LeftArm', ee='BoneIK_LeftHand', solver='ikRPsolver', name='ikHandle_Arm_Left')[0]
         ikLegR = pm.ikHandle(sj='BoneIK_RightUpLeg', ee='BoneIK_RightFoot', solver='ikRPsolver', name='ikHandle_Leg_Right')[0]
+        ikFootR = pm.ikHandle(sj='BoneIK_RightFoot', ee='BoneIK_RightToeBase', solver='ikSCsolver', name='ikHandle_Foot_Right')[0]
         ikArmR = pm.ikHandle(sj='BoneIK_RightArm', ee='BoneIK_RightHand', solver='ikRPsolver', name='ikHandle_Arm_Right')[0]
         pm.parentConstraint('ik_Foot_Left',ikLegL)
+        pm.parentConstraint('ik_Foot_Left', ikFootL, mo=True)
         pm.parentConstraint('ik_Hand_Left', ikArmL)
         pm.parentConstraint('ik_Foot_Right', ikLegR)
+        pm.parentConstraint('ik_Foot_Right', ikFootR, mo=True)
         pm.parentConstraint('ik_Hand_Right', ikArmR)
 
         #offset the pole vectors via a vector method later!
@@ -168,37 +178,88 @@ class PrismRigger():
                 pm.setAttr(parConstr.getWeightAliasList()[-1], 0)
             else:
                 pm.parentConstraint(i.replace('Character_', 'BoneFK_'), i, mo=False, w=1)
+
+        #grouping the IK controllers all under an IK controller group
+        ikGrp = pm.group(name='ikContr_grp', world=True)
+        pm.parent('pv_Knee_Left',
+                  'pv_Knee_Right',
+                  'pv_Elbow_Left',
+                  'pv_Elbow_Right',
+
+                  ikGrp)
+
+        #now doing last constraints for the stuff I left out accidentally. Will fix at a later date.
         pm.parentConstraint('BoneFK_Hips', 'Character_Hips', mo=False, w=1)
+        pm.parentConstraint('BoneIK_LeftArm', 'Character_LeftArm', mo=False, w=0)
+        pm.parentConstraint('BoneIK_RightArm', 'Character_RightArm', mo=False, w=0)
+        pm.parentConstraint('BoneIK_LeftUpLeg', 'Character_LeftUpLeg', mo=False, w=0)
+        pm.parentConstraint('BoneIK_RightUpLeg', 'Character_RightUpLeg', mo=False, w=0)
+
+        '''
+        This part is the prepping of the nodes for the softIK
+        
+        pm.shadingNode('addDoubleLinear', asUtility=True, name='node_ArmLength') #left arm length
+        pm.connectAttr('BoneFK_LeftForeArm.tx', 'node_ArmLength.input1')
+        pm.connectAttr('BoneFK_LeftHand.tx', 'node_ArmLength.input2')
+
+        pm.shadingNode('addDoubleLinear', asUtility=True, name='node_LegLength') #left leg length
+        pm.connectAttr('BoneFK_LeftLeg.tx', 'node_LegLength.input1')
+        pm.connectAttr('BoneFK_LeftFoot.tx', 'node_LegLength.input2')
+
+        pm.shadingNode('multiplyDivide', asUtility=True, name='node_ratio')
+        pm.setAttr('node_ratio.operation', 2)
+        pm.connectAttr('node_LegLength.output', 'node_ratio.input1x')
+        pm.connectAttr('node_ArmLength.output', 'node_ratio.input2x')
+        '''
 
     def exportWeights(self): #besides exporting the weights, copy them into memory so that the rigger can make slight bone shifting
         pass
     def importWeights(self): #copy from memory if the data exists, so slight bone shifts can be made
         pass
 
-    '''
-    1. use the translate X output of the bones and connect it to a sum node to get the full length of the legs.
-    2. for some reason, the sum of the arms and legs are sent into a divide node (output is leg length divided by arm length), then the resulting output is sent into the another multiply node 
-    to be multiplied with the softness value. 
-    FIGURED IT OUT
-    the reason the leg length was divided by the arm length is simply to obtain an arbitrary non zero and >1 number that would serve as a multiplier for the softness.
-    
-    3. then just add a bigger than 0 conditional to switch on and off the scaling and apply the following formula
-    x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
-    
-    
-    //腕
-    float $sof_ude_l = condition_ude_softness_l.outColorR;
-    float $dis_ude_l = distanceBetween_ude_l.distance;
-    float $disSub_ude_l = plusMinusAverage_ude_factDist_Sub_l.output3Dx;
-    multiplyDivide_ude_smartRatio_l.input1X = $sof_ude_l*( 1-exp(-1*($dis_ude_l-$disSub_ude_l)/$sof_ude_l) )+ $disSub_ude_l;
 
-    //脚
-    float $sof_ashi_l = condition_ashi_softness_l.outColorR; softness
-    float $dis_ashi_l = distanceBetween_ashi_l.distance; length of leg
-    float $disSub_ashi_l = plusMinusAverage_ashi_factDist_Sub_l.output3Dx; arbitrary ratio between leg and arm
-    multiplyDivide_ashi_smartRatio_l.input1X = $sof_ashi_l*( 1-exp(-1*($dis_ashi_l-$disSub_ashi_l)/$sof_ashi_l) )+ $disSub_ashi_l;
-    x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
-    '''
+
+
+    def softIK(self, *mayafalse):
+        pass
+        '''
+        1. use the translate X output of the bones and connect it to a sum node to get the full length of the legs.
+        2. for some reason, the sum of the arms and legs are sent into a divide node (output is leg length divided by arm length), then the resulting output is sent into the another multiply node 
+        to be multiplied with the softness value. 
+        FIGURED IT OUT
+        the reason the leg length was divided by the arm length is simply to obtain an arbitrary non zero and >1 number that would serve as a multiplier for the softness.
+        the reason is that if we inserted an arbitrary length/number, it would change from character to character, so having arm and leg length serve as the two arbitrary numbers ensures that
+        no character to character tweaking is needed.
+        
+        3. then just add a bigger than 0 conditional to switch on and off the scaling and apply the following formula
+        x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
+        
+        
+        //腕
+        float $sof_ude_l = condition_ude_softness_l.outColorR;
+        float $dis_ude_l = distanceBetween_ude_l.distance;
+        float $disSub_ude_l = plusMinusAverage_ude_factDist_Sub_l.output3Dx;
+        multiplyDivide_ude_smartRatio_l.input1X = $sof_ude_l*( 1-exp(-1*($dis_ude_l-$disSub_ude_l)/$sof_ude_l) )+ $disSub_ude_l;
+    
+        //脚
+        float $sof_ashi_l = condition_ashi_softness_l.outColorR; softness
+        float $dis_ashi_l = distanceBetween_ashi_l.distance; length of leg
+        float $disSub_ashi_l = plusMinusAverage_ashi_factDist_Sub_l.output3Dx; arbitrary ratio between leg and arm
+        multiplyDivide_ashi_smartRatio_l.input1X = $sof_ashi_l*( 1-exp(-1*($dis_ashi_l-$disSub_ashi_l)/$sof_ashi_l) )+ $disSub_ashi_l;
+        x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
+    
+    
+        float $sof_leg_l =  condition1.outColorR;
+        float $dis_leg_l = addDoubleLinear3.output; #this one check if it`s a measurement node or the absolute node later on
+        float $ratio_leg = multiplyDivide1.output;
+        group1.tx = $sof_leg_l*( 1-exp(-1*($dis_leg_l-$ratio_leg)/$sof_leg_l) ) + $ratio_leg;
+    
+        float $sof_leg_l =  condition1.outColorR;
+        float $dis_leg_l = distanceDimension1.distance;
+        float $ratio_leg = multiplyDivide1.outputX;
+        group1.ty = ($sof_leg_l*( 1-exp(-1*($dis_leg_l-$ratio_leg)/$sof_leg_l) ) + $ratio_leg) * ik_Foot_Left.softIK;
+    
+        '''
 
 class PrismPicker():
 
