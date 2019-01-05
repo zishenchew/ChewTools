@@ -78,6 +78,15 @@ class PrismRigger():
         pm.xform(grp, t=pm.xform(contrName, ws=True, q=True, t=True),
                  ro=pm.xform(contrName, ws=True, q=True, ro=True),
                  scale=(5, 5, 5))  # translate controller to appropriate position, scaling to 5
+
+        #creating an extra set of controls for fresh gimbals
+        #controllers are only created for arms and legs
+        if 'Arm' in str(contrName) or 'Hand' in str(contrName) or 'Leg' in str(contrName) or 'Foot' in str(contrName):
+            dupe = pm.duplicate(contr, name = str(contr) + '_gimbal')
+            pm.parent(dupe, contr)
+            pm.xform(dupe, scale=(0.8,0.8,0.8)) #shrinking it so it can be seen
+            pm.makeIdentity(dupe, apply=True, translate=True, rotate=True, scale=True)
+
         #pm.setAttr(grp.translate, lock=True) #locking attributes
         #pm.setAttr(grp.rotate, lock=True)
         #pm.setAttr(grp.scale, lock=True)
@@ -131,9 +140,7 @@ class PrismRigger():
     def createRig(self):
         #constrain joints to controllers
         for i in self.jointController:
-            #print i
-            pm.parentConstraint(self.jointController[i][2], 'BoneFK' + i.lstrip('Character'), mo=True, )
-
+            pm.parentConstraint(self.jointController[i][2], 'BoneFK' + i.lstrip('Character'), mo=True)
 
         #create IK chains
         ikLegL = pm.ikHandle(sj='BoneIK_LeftUpLeg', ee='BoneIK_LeftFoot', solver='ikRPsolver', name='ikHandle_Leg_Left')[0]
@@ -142,13 +149,15 @@ class PrismRigger():
         ikLegR = pm.ikHandle(sj='BoneIK_RightUpLeg', ee='BoneIK_RightFoot', solver='ikRPsolver', name='ikHandle_Leg_Right')[0]
         ikFootR = pm.ikHandle(sj='BoneIK_RightFoot', ee='BoneIK_RightToeBase', solver='ikSCsolver', name='ikHandle_Foot_Right')[0]
         ikArmR = pm.ikHandle(sj='BoneIK_RightArm', ee='BoneIK_RightHand', solver='ikRPsolver', name='ikHandle_Arm_Right')[0]
+        '''
+        #this is gonna be redundant soon. Delete later
         pm.parentConstraint('ik_Foot_Left',ikLegL)
         pm.parentConstraint('ik_Foot_Left', ikFootL, mo=True)
         pm.parentConstraint('ik_Hand_Left', ikArmL)
         pm.parentConstraint('ik_Foot_Right', ikLegR)
         pm.parentConstraint('ik_Foot_Right', ikFootR, mo=True)
         pm.parentConstraint('ik_Hand_Right', ikArmR)
-
+        '''
         #offset the pole vectors via a vector method later!
         pm.poleVectorConstraint('pv_Knee_Left', ikLegL)
         pm.poleVectorConstraint('pv_Elbow_Left', ikArmL)
@@ -157,12 +166,25 @@ class PrismRigger():
 
         #parenting FK controllers into correct hierarchy
         for i in self.jointController:
-            #print i
+            #inserting extra logic to account for the extra gimbal controllers created
             try:
-                pm.parent(str(self.jointController[i][2] + '_grp'), self.jointController[str(pm.listRelatives(i, p=True)[0])][2])
+                if pm.ls(self.jointController[str(pm.listRelatives(i, p=True)[0])][2] + '_gimbal'):
+                    #print('gimbals')
+                    #print(self.jointController[i][2] + ' -> ' + self.jointController[str(pm.listRelatives(i, p=True)[0])][2] + '_gimbal')
+                    pm.parent(self.jointController[i][2] + '_grp', self.jointController[str(pm.listRelatives(i, p=True)[0])][2] + '_gimbal')
+
+                else:
+                    try:
+                        pm.parent(str(self.jointController[i][2] + '_grp'),
+                                  self.jointController[str(pm.listRelatives(i, p=True)[0])][2])
+                    except:
+                        pass
             except:
                 print('exception for hips')
                 pass
+
+
+
 
         #constraining all the requisite stuff
         #constraining the character bones to both the IK and FK bones
@@ -180,12 +202,15 @@ class PrismRigger():
                 pm.parentConstraint(i.replace('Character_', 'BoneFK_'), i, mo=False, w=1)
 
         #grouping the IK controllers all under an IK controller group
-        ikGrp = pm.group(name='ikContr_grp', world=True)
+        ikGrp = pm.group(name='ikContr_grp', empty=True)
         pm.parent('pv_Knee_Left',
                   'pv_Knee_Right',
                   'pv_Elbow_Left',
                   'pv_Elbow_Right',
-
+                  'ik_Foot_Left',
+                  'ik_Foot_Right',
+                  'ik_Hand_Left',
+                  'ik_Hand_Right',
                   ikGrp)
 
         #now doing last constraints for the stuff I left out accidentally. Will fix at a later date.
@@ -195,6 +220,53 @@ class PrismRigger():
         pm.parentConstraint('BoneIK_LeftUpLeg', 'Character_LeftUpLeg', mo=False, w=0)
         pm.parentConstraint('BoneIK_RightUpLeg', 'Character_RightUpLeg', mo=False, w=0)
 
+        #grouping the IK handles of the arms and legs in preparation for the softIK
+        for i in pm.ls('ikHandle*', type='ikHandle'):
+            grp = pm.group(name=i + '_grp', empty=True)
+            pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True), ws=True) #centering pivot
+            pm.makeIdentity(grp, apply=True, translate=True, scale=True)
+            if i[9:12] == 'Leg' or i[9:12] == 'Foo':
+                if i[-4:] == 'ight':
+                    pm.parent(i, 'ik_Foot_' + i[-5:])
+                else:
+                    pm.parent(i, 'ik_Foot_' + i[-4:])
+            else:
+                if i[-4:] == 'ight':
+                    pm.parent(i, 'ik_Hand_' + i[-5:])
+                else:
+                    pm.parent(i, 'ik_Hand_' + i[-4:])
+
+        for i in pm.listRelatives(ikGrp):
+            if i[:2] == 'ik':
+                grp = pm.group(name=i + '_grp', empty=True)
+                pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
+                         ws=True)  # translate controller to appropriate position, scaling to 5
+                pm.makeIdentity(grp, apply=True, translate=True, scale=True)
+                pm.parent()
+
+        pm.delete('ikHandle_Arm_Left_grp') #deleting empty groups
+        pm.delete('ikHandle_Arm_Right_grp')
+        pm.delete('ikHandle_Foot_Left_grp')
+        pm.delete('ikHandle_Foot_Right_grp')
+        pm.delete('ikHandle_Leg_Left_grp')
+        pm.delete('ikHandle_Leg_Right_grp')
+        pm.delete('ik_Foot_Left_grp')
+        pm.delete('ik_Foot_Right_grp')
+        pm.delete('ik_Hand_Left_grp')
+        pm.delete('ik_Hand_Right_grp')
+
+        '''
+        get this to work another time
+        for i in pm.ls('ik*', type='transform', assemblies=True): #deleting empty groups
+            if pm.listRelatives(i, parent=True) == []:
+                children = pm.listRelatives(i)
+                if not pm.listRelatives(i):
+                    try:
+                        pm.delete(i)
+                    except:
+                        print('deleting empty top level transform nodes')
+                        pass
+        '''
         '''
         This part is the prepping of the nodes for the softIK
         
