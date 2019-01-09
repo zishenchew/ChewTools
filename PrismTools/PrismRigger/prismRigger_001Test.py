@@ -315,21 +315,41 @@ class PrismRigger():
     
         //脚
         float $sof_ashi_l = condition_ashi_softness_l.outColorR; softness
-        float $dis_ashi_l = distanceBetween_ashi_l.distance; length of leg
+        float $dis_ashi_l = distanceBetween_ashi_l.distance; direct distance between two points of leg
         float $disSub_ashi_l = plusMinusAverage_ashi_factDist_Sub_l.output3Dx; arbitrary ratio between leg and arm
         multiplyDivide_ashi_smartRatio_l.input1X = $sof_ashi_l*( 1-exp(-1*($dis_ashi_l-$disSub_ashi_l)/$sof_ashi_l) )+ $disSub_ashi_l;
         x = softness * (1-exp(-1*(length - ratio)/softness) ) + (ratio)
-    
-    
+        #aim constraint is used to keep the group/object pointed at the leg
+        
+float $sof_ashi_l = condition_ashi_softness_l.outColorR;
+float $dis_ashi_l = distanceBetween_ashi_l.distance;
+float $disSub_ashi_l = plusMinusAverage_ashi_factDist_Sub_l.output3Dx;
+expression2.test1 = $sof_ashi_l*( 1-exp(-1*($dis_ashi_l-$disSub_ashi_l)/$sof_ashi_l) )+ $disSub_ashi_l;
+expression2.exp1 = (1-exp(-1*($dis_ashi_l-$disSub_ashi_l)/$sof_ashi_l) )+ $disSub_ashi_l;
+        
+        
         float $sof_leg_l =  condition1.outColorR;
         float $dis_leg_l = addDoubleLinear3.output; #this one check if it`s a measurement node or the absolute node later on
         float $ratio_leg = multiplyDivide1.output;
         group1.tx = $sof_leg_l*( 1-exp(-1*($dis_leg_l-$ratio_leg)/$sof_leg_l) ) + $ratio_leg;
     
-        float $sof_leg_l =  condition1.outColorR;
-        float $dis_leg_l = distanceDimension1.distance;
-        float $ratio_leg = multiplyDivide1.outputX;
-        group1.ty = ($sof_leg_l*( 1-exp(-1*($dis_leg_l-$ratio_leg)/$sof_leg_l) ) + $ratio_leg) * ik_Foot_Left.softIK;
+float $sof_leg_l = condition1.outColorR;
+float $dis_leg_l = distanceBetween1.distance;
+float $ratio_leg = multiplyDivide1.outputX;
+group1.ty = ( 1-exp(-1*($dis_leg_l-$ratio_leg)) );
+
+expression2.softness = ik_Foot_Left.softIK;
+expression2.softRatio = addDoubleLinear3.output - condition1.outColorR;
+expression2.dist1 = distanceBetween1.distance;
+expression2.ratio = multiplyDivide1.outputX;
+expression2.testExp = 1-exp(expression2.softness);
+expression2.testExp2 = expression2.softness * (1-exp(-1*(distanceBetween1.distance - expression2.softRatio)/expression2.softRatio));
+expression2.distDiff = distanceBetween1.distance - addDoubleLinear3.output;
+expression2.group1ty = expression2.softness * (1-exp(-1*(expression2.dist1 - expression2.ratio)/expression2.softRatio))
+group1.ty = expression2.softness * (1-exp(-1*(distanceBetween1.distance - expression2.ratio)/expression2.softRatio));
+
+1 - exp(-1*(1- 
+
     
         '''
 
@@ -361,9 +381,7 @@ class PrismPicker():
         # execute buildpicker() with the first argument of the charaList
 
         try:
-            for i in self.charaListDump:
-                pass
-            self.buildPicker(i)
+            self.buildPicker(self.charaListDump.keys()[0])
             #print('pickerData', self.pickerData)  # for debugging purposes
             #print('charaList', self.charaListDump)  # for debugging purposes
         except:
@@ -381,7 +399,7 @@ class PrismPicker():
 
 
         for i in range(len(pickerDataName)):
-            self.charaListDump[pickerDataName[i].rstrip('_PickerData')] = pm.getAttr(self.synopticNode+'.%s' %pickerDataName[i])
+            self.charaListDump[pickerDataName[i][:-11]] = pm.getAttr(self.synopticNode+'.%s' %pickerDataName[i])
         '''
         for i in pickerDataName:
             self.charaListDump[i.rstrip('_PickerData')] = pm.getAttr('Master_Controller.%s' %pickerDataName[i])
@@ -432,7 +450,7 @@ class PrismPicker():
         self.buttonLayout = pm.rowLayout(parent=pickerLayout, nc=10)
         # buttons
         pm.text(' ', width=85)
-        pm.button('newChara', label=u'新しいキャラクター', command=self.saveToChar, parent=self.buttonLayout)
+        pm.button('newChara', label=u'新しいキャラクター', command=partial(self.saveToChar, 'new'), parent=self.buttonLayout)
         pm.button('overwritePicker', label=u'保存する', command=self.saveToChar, parent=self.buttonLayout)
         pm.button('export', label=u'書き出す', command=partial(self.saveToChar, 'export'), parent=self.buttonLayout)
 
@@ -473,7 +491,6 @@ class PrismPicker():
         # pm.window(windowID, edit = True, widthHeight = (600,800))
 
     def buildPicker(self, charaName):
-
         # the format for the picker raw data should be
         # ControllerName Width Height FromLeft FromTop Colour
         # for a total of 6 items in the list
@@ -486,7 +503,6 @@ class PrismPicker():
         # clearing UI for rebuilding
         for i in pm.lsUI(type='iconTextButton'):
             if 'button_' in i:
-                print i
                 pm.deleteUI(i)
 
         try:
@@ -502,6 +518,7 @@ class PrismPicker():
         #print self.pickerData[i][-1].split(',')[0]
         #print self.pickerData
         #print self.charaListDump
+        print self.pickerData
         for i in self.pickerData:
             pickerButton = pm.iconTextButton('button_' + i, style='textOnly',
                               bgc=(float(self.pickerData[i][-1].split(',')[0]), float(self.pickerData[i][-1].split(',')[1]), float(self.pickerData[i][-1].split(',')[2])), #colour
@@ -545,7 +562,7 @@ class PrismPicker():
         # fromLeft height will bet self.but1[0]
         # fromTop height will bet self.but1[1]
         try:
-            createBut = pm.iconTextButton(pm.ls(sl=True)[0], style='textOnly',
+            createBut = pm.iconTextButton('button_' + pm.ls(sl=True)[0], style='textOnly',
                                           bgc=colour,
                                           width=(dragControl[-3] - int(self.but1[-3])),
                                           height=(dragControl[-2] - int(self.but1[-2])),
@@ -562,12 +579,16 @@ class PrismPicker():
         # gonna have to add the button data to the dictinary and store it in memory and then write a small section of logic to export it out into the format I set above
         # the format for the picker raw data should be
         # ControllerName Width Height FromLeft FromTop Colour
-
+        self.charaListDump
         self.pickerData[str(pm.ls(sl=True)[0])] = [(dragControl[-3] - int(self.but1[-3])), (dragControl[-2] - int(self.but1[-2])), self.but1[-3], self.but1[-2], colour]
         # print self.pickerData[pm.ls(sl=True)[0]]
 
+        print('printing self.picketData')
         print(self.pickerData)
         self.saveToChar(False)
+
+        self.loadPicker()
+
 
     def deleteButton(self, buttonName):
         pass
@@ -616,10 +637,11 @@ class PrismPicker():
     def importHumanIK(self):
         pass
 
-    def saveToChar(self, mayaFalse, *save):
+    def saveToChar(self, *mayaFalse): #mayafalse becomes a container for all optional arguments, so the argument for which mode of the function to be used becomes mayaFalse[0]
         # dump the current buttons into a readable format onto the master controller of the main char as string attribute
         if not pm.ls('SynopticNode', type='transform'): #creating synoptic node if it doesn't already exist
-            self.synopticNode = pm.group(name='SynopticNode')
+            self.synopticNode = pm.group(name='SynopticNode', empty=True)
+        if mayaFalse[0] == 'new':
             pm.promptDialog(title=u'キャラ名前',
                             message=u'キャラクターを書いてください',
                             button=['OK', 'Cancel'],
@@ -629,7 +651,7 @@ class PrismPicker():
             pm.addAttr(self.synopticNode, ln=pm.promptDialog(q=True, text=True) + '_PickerData', dt='string')
             self.loadPicker()
             self.pickerUI()
-            #self.buildPicker(pm.promptDialog(q=True, text=True) + '_PickerData')
+            self.buildPicker(pm.promptDialog(q=True, text=True) + '_PickerData')
             #print 'charaListDump is ' + str(self.charaListDump)
             #pm.optionMenu(self.charaOptionMenu, e=True, value=pm.promptDialog(q=True, text=True))
             return
@@ -646,7 +668,7 @@ class PrismPicker():
 
         saveData = saveData.replace(' \n', '\n')
         print(saveData)
-        if save == 'new':
+        if mayaFalse[0] == 'new':
             pm.promptDialog(title=u'キャラ名前',
                             message=u'キャラクターを書いてください',
                             button=['OK', 'Cancel'],
@@ -656,8 +678,9 @@ class PrismPicker():
             pm.addAttr(self.synopticNode, ln=pm.promptDialog(q=True, text=True) + '_PickerData', dt='string')
             self.loadPicker()
             self.pickerUI()
+            #self.buildPicker(pm.promptDialog(q=True, text=True) + '_PickerData')
             #pm.addAttr(self.synopticNode, ln='Test', dt='string') delete later after it runs
-        elif save == 'export':
+        elif mayaFalse[0] == 'export':
             exportLocation = pm.fileDialog2(ds=2, ff='ORENDA Synoptic files (*syn) (*.syn)', fm=1)
             expFile = open(exportLocation, 'w+')
             expFile.write(saveData.rstrip('\n'))
