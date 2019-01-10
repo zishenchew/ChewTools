@@ -400,10 +400,7 @@ class PrismPicker():
 
         for i in range(len(pickerDataName)):
             self.charaListDump[pickerDataName[i][:-11]] = pm.getAttr(self.synopticNode+'.%s' %pickerDataName[i])
-        '''
-        for i in pickerDataName:
-            self.charaListDump[i.rstrip('_PickerData')] = pm.getAttr('Master_Controller.%s' %pickerDataName[i])
-        '''
+            print self.charaListDump
 
     def pickerUI(self):
         # checking for duplicate windows
@@ -507,7 +504,11 @@ class PrismPicker():
 
         try:
             for j in self.charaListDump[charaName].split('\n'):
-                self.pickerData[j.split(' ')[0]] = j.lstrip(j.split(' ')[0] + ' ').split(' ')
+                self.pickerData[j.split(' ')[0]] = j[len(j.split(' ')[0] + ' '):].split(' ')
+                print j
+                print j[len(j.split(' ')[0] + ' '):]
+                print j[len(j.split(' ')[0] + ' '):].split(' ')
+
         except:
             pass
 
@@ -518,15 +519,16 @@ class PrismPicker():
         #print self.pickerData[i][-1].split(',')[0]
         #print self.pickerData
         #print self.charaListDump
-        print self.pickerData
+        #print self.pickerData
         for i in self.pickerData:
+            #print(self.pickerData[i], i)
             pickerButton = pm.iconTextButton('button_' + i, style='textOnly',
                               bgc=(float(self.pickerData[i][-1].split(',')[0]), float(self.pickerData[i][-1].split(',')[1]), float(self.pickerData[i][-1].split(',')[2])), #colour
                               width=int(self.pickerData[i][0]),
                               height=int(self.pickerData[i][1]),
                                             command=partial(self.selectFunc, i),
                                              parent=self.pickerLayout)
-
+            #print('width:%s'%str(self.pickerData[i][0]) + ' height:%s'%str(self.pickerData[i][1]))
             pm.formLayout(self.pickerLayout, edit=True,
                           attachPosition=[(pickerButton, 'left', int(self.pickerData[i][2]), 0),
                                           (pickerButton, 'top', int(self.pickerData[i][3]), 0)])
@@ -544,7 +546,7 @@ class PrismPicker():
             return
 
         # the rest of the function for creating a button is in this function
-        print(dragControl[-3], dragControl[-2])
+        #print(dragControl[-3], dragControl[-2])
 
         if len(pm.ls(sl=True)) == 0:
             return
