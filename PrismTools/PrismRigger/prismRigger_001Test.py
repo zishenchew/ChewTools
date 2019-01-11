@@ -381,7 +381,7 @@ class PrismPicker():
         # execute buildpicker() with the first argument of the charaList
 
         try:
-            self.buildPicker(self.charaListDump.keys()[0])
+            self.buildPicker(self.charaOptionMenuList[0])
             #print('pickerData', self.pickerData)  # for debugging purposes
             #print('charaList', self.charaListDump)  # for debugging purposes
         except:
@@ -396,11 +396,12 @@ class PrismPicker():
         else:
             pickerDataName = []
         self.charaListDump = {}
-
+        self.charaOptionMenuList = []
 
         for i in range(len(pickerDataName)):
             self.charaListDump[pickerDataName[i][:-11]] = pm.getAttr(self.synopticNode+'.%s' %pickerDataName[i])
-            print self.charaListDump
+            self.charaOptionMenuList.append(pickerDataName[i][:-11])
+            #print self.charaListDump
 
     def pickerUI(self):
         # checking for duplicate windows
@@ -411,7 +412,7 @@ class PrismPicker():
             pm.windowPref('prismPicker', remove=True)
 
         # creating window
-        pm.window(windowID, title='ORENDA Synoptic', widthHeight=(600, 800))
+        pm.window(windowID, title='ORENDA Synoptic', widthHeight=(610, 800), tlc=(100,300))
 
         # menu bar
         menuBar = pm.menuBarLayout()
@@ -432,14 +433,16 @@ class PrismPicker():
 
         # label
         self.masterCol = pm.columnLayout('master col', width=600)
-        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=590,
+        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=600,
                                           parent=self.masterCol)
 
         # optionMenu
         pickerListLayout = pm.rowLayout(parent=self.labelLayout, nc=10)
         pm.text(label=u'キャラクター名：', width=85, align='right')
+
         self.charaOptionMenu = pm.optionMenu(changeCommand=self.buildPicker, parent=pickerListLayout)
-        for i in self.charaListDump:
+        #sorting option menu alphabetically
+        for i in self.charaOptionMenuList:
             pm.menuItem(i, label=i, parent=self.charaOptionMenu)
 
         # button layout
@@ -505,9 +508,6 @@ class PrismPicker():
         try:
             for j in self.charaListDump[charaName].split('\n'):
                 self.pickerData[j.split(' ')[0]] = j[len(j.split(' ')[0] + ' '):].split(' ')
-                print j
-                print j[len(j.split(' ')[0] + ' '):]
-                print j[len(j.split(' ')[0] + ' '):].split(' ')
 
         except:
             pass
@@ -543,6 +543,8 @@ class PrismPicker():
 
         # perform a check to see if edit mode is on. if not, then function will not work.
         if self.editMode == False:
+            if len(pm.ls(sl=True)) == 0:
+                print 'dragDropSuccess'
             return
 
         # the rest of the function for creating a button is in this function
@@ -560,7 +562,7 @@ class PrismPicker():
             colour = (0,0,1)
         else:
             return
-
+        print 'dragDropSuccess'
         # fromLeft height will bet self.but1[0]
         # fromTop height will bet self.but1[1]
         try:
