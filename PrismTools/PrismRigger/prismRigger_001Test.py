@@ -412,7 +412,7 @@ class PrismPicker():
             pm.windowPref('prismPicker', remove=True)
 
         # creating window
-        pm.window(windowID, title='ORENDA Synoptic', widthHeight=(610, 800), tlc=(100,300))
+        pm.window(windowID, title='ORENDA Synoptic', widthHeight=(410, 650), tlc=(100,300))
 
         # menu bar
         menuBar = pm.menuBarLayout()
@@ -432,8 +432,8 @@ class PrismPicker():
 
 
         # label
-        self.masterCol = pm.columnLayout('master col', width=600)
-        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=600,
+        self.masterCol = pm.columnLayout('master col', width=400)
+        self.labelLayout = pm.frameLayout(label=u'設定', labelIndent=5, marginHeight=5, nch=5, width=400,
                                           parent=self.masterCol)
 
         # optionMenu
@@ -456,15 +456,15 @@ class PrismPicker():
 
         # picker
         # pickerLayout = pm.columnLayout(parent=self.masterCol)
-        self.pickerFrame = pm.frameLayout(label='Synoptic', bgc=(0, 0, 0), parent=self.masterCol, bv=0, backgroundShade=1, height=500, width=590, collapsable=0)
+        self.pickerFrame = pm.frameLayout(label='Synoptic', bgc=(0, 0, 0), parent=self.masterCol, bv=0, backgroundShade=1, height=500, width=400, collapsable=0)
         
 
 
 
 
-        self.pickerLayout = pm.formLayout(numberOfDivisions=100, dgc=self.drag1, dpc=self.createButton)
+        self.pickerLayout = pm.formLayout(numberOfDivisions=100, dgc=self.drag1, dpc=self.createButton, parent=self.pickerFrame)
 
-        pm.image(image=r'\\p.sv\Tool\PrismTools\PrismRigPicker\BG_Base.png')
+        pm.image(image=r'\\p.sv\Tool\PrismTools\PrismRigPicker\BG_Base.png', width=400, height=450)
 
         '''
         button1 = pm.iconTextButton(style='textOnly', bgc=(0,1,0), width=20, height=20)
@@ -488,7 +488,7 @@ class PrismPicker():
 
 
         pm.showWindow() # calls the window out
-        # pm.window(windowID, edit = True, widthHeight = (600,800))
+        #pm.window(windowID, edit = True)
 
     def buildPicker(self, charaName):
         # the format for the picker raw data should be
@@ -530,8 +530,8 @@ class PrismPicker():
                                              parent=self.pickerLayout)
             #print('width:%s'%str(self.pickerData[i][0]) + ' height:%s'%str(self.pickerData[i][1]))
             pm.formLayout(self.pickerLayout, edit=True,
-                          attachPosition=[(pickerButton, 'left', int(self.pickerData[i][2]), 0),
-                                          (pickerButton, 'top', int(self.pickerData[i][3]), 0)])
+                          attachPosition=[(pickerButton, 'left', float(self.pickerData[i][0])/-2, float(self.pickerData[i][2])),
+                                          (pickerButton, 'top', float(self.pickerData[i][1])/-2, float(self.pickerData[i][3]))])
 
     def drag1(self, *dra1):
         # first function for creating a button
@@ -573,8 +573,8 @@ class PrismPicker():
                                           command=partial(self.selectFunc, pm.ls(sl=True)),
                                           parent=self.pickerLayout)
             pm.formLayout(self.pickerLayout, edit=True,
-                          attachPosition=[(createBut, 'left', self.but1[-3], 0),
-                                          (createBut, 'top', self.but1[-2], 0)])
+                          attachPosition=[(createBut, 'left', 0, float(self.but1[-3])/6),
+                                          (createBut, 'top', 0, float(self.but1[-2])/4.74)])
 
         except:
             pm.confirmDialog(title='ORENDA  picker', message=u'そのコントローラーも登録しました。。')
@@ -764,3 +764,54 @@ class PrismPicker():
 
     def renameChara(self):
         pass
+'''
+pl01:Root_POS_ROT', 28.333333333333332)
+pl01:R_EF1_ROT' 20.833333333333332)
+pl01:R_CF1_ROT' 20.833333333333332)
+pl01:R_CF3_ROT' 9.166666666666666)
+pl01:R_CF2_ROT' 15.0)
+pl01:L_BF3_ROT' 85.83333333333333)
+pl01:COG_POS' 38.333333333333336)
+pl01:L_CF1_ROT'), 'left', 74.16666666666667)
+pl01:R_Heel_ROT'), 'left', 35.0)
+pl01:L_CF3_ROT'), 'left', 85.83333333333333)
+pl01:R_FF2_ROT'), 'left', 15.0)
+pl01:L_DF_ROT'), 'left', 68.33333333333333)
+pl01:L_EF2_ROT'), 'left', 80.0)
+pl01:L_Leg_POS_ROT'), 'left', 56.666666666666664)
+pl01:L_AF2_ROT'), 'left', 78.33333333333333)
+pl01:R_Leg_POS_ROT'), 'left', 39.166666666666664)
+pl01:Head_ROT'), 'left', 46.666666666666664)
+pl01:Chest_ROT'), 'left', 45.833333333333336)
+pl01:R_AF1_ROT'), 'left', 22.5)
+pl01:R_EF3_ROT'), 'left', 9.166666666666666)
+pl01:L_EF3_ROT'), 'left', 85.83333333333333)
+pl01:R_AF2_ROT'), 'left', 17.5)
+pl01:L_Elbow_ROT'), 'left', 70.0)
+pl01:L_AF3_ROT'), 'left', 83.33333333333333)
+pl01:Neck_ROT'), 'left', 47.5)
+pl01:R_EF2_ROT'), 'left', 15.0)
+pl01:R_Knee_ROT'), 'left', 39.166666666666664)
+pl01:R_Shoulder_ROT'), 'left', 40.833333333333336)
+pl01:R_Arm_POS'), 'left', 16.666666666666668)
+pl01:L_Toe_ROT'), 'left', 53.333333333333336)
+pl01:L_CF2_ROT'), 'left', 80.0)
+pl01:R_FF3_ROT'), 'left', 9.166666666666666)
+pl01:L_AF1_ROT'), 'left', 73.33333333333333)
+pl01:R_FF1_ROT'), 'left', 20.833333333333332)
+pl01:R_Toe_ROT'), 'left', 44.166666666666664)
+pl01:Hip_ROT'), 'left', 48.333333333333336)
+pl01:L_FF1_ROT'), 'left', 74.16666666666667)
+pl01:R_BF3_ROT'), 'left', 9.166666666666666)
+pl01:R_BF1_ROT'), 'left', 20.833333333333332)
+pl01:R_Hand_ROT'), 'left', 10.833333333333334)
+pl01:L_FF3_ROT'), 'left', 85.83333333333333)
+pl01:L_EF1_ROT'), 'left', 74.16666666666667)
+pl01:L_Heel_ROT'), 'left', 61.666666666666664)
+pl01:R_BF2_ROT'), 'left', 15.0)
+pl01:R_DF_ROT'), 'left', 28.333333333333332)
+pl01:L_BF1_ROT'), 'left', 74.16666666666667)
+pl01:L_FF2_ROT'), 'left', 80.0)
+pl01:L_Knee_ROT'), 'left', 57.5)
+pl01:R_Elbow_ROT'), 'left', 26.666666666666668)
+'''
