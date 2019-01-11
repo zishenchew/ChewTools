@@ -464,7 +464,7 @@ class PrismPicker():
 
         self.pickerLayout = pm.formLayout(numberOfDivisions=100, dgc=self.drag1, dpc=self.createButton)
 
-        pm.image(image=r'D:\ChewTools\PrismTools\PrismRigger\BG_Base.png')
+        pm.image(image=r'\\p.sv\Tool\PrismTools\PrismRigPicker\BG_Base.png')
 
         '''
         button1 = pm.iconTextButton(style='textOnly', bgc=(0,1,0), width=20, height=20)
