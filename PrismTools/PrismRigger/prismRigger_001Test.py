@@ -115,7 +115,12 @@ class PrismRigger():
                     #pm.makeIdentity(contr, apply=True, translate=True, scale=True)
                     pm.parent(contr, world=True, absolute=True)
                     pm.delete(grp)
+                    pm.addAttr(contr, dt='string', longName='default')#setting default hand transform values
+                    pm.setAttr(contr.default,
+                               str(pm.xform(contr, ws=True, q=True, t=True)).strip('[').strip(']').replace(
+                                   ', ', ' '))
                     pm.makeIdentity(contr, apply=True, translate=True, rotate=True, scale=True)
+
                 elif 'Foot' in self.jointController[i][3]:
                     pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
                              ws=True,
@@ -479,12 +484,16 @@ class PrismPicker():
 
         # bottom buttons
         self.bottomButtonLayout = pm.rowLayout(parent=self.masterCol, nc=10)
-        pm.text(' ', width=40, parent=self.bottomButtonLayout)
+        pm.text(' ', width=30, parent=self.bottomButtonLayout)
         pm.button('selectAll', label=u'全部を選択する', parent=self.bottomButtonLayout, width=100, command=self.selectAll)
-        pm.text(' ', width=10, parent=self.bottomButtonLayout)
-        pm.button('fkik', label=u'IKに差し替え', parent=self.bottomButtonLayout, width=70, command=self.fkikSwitch)
-        pm.text(' ', width=10, parent=self.bottomButtonLayout)
-        pm.button('ikfk', label=u'FKに差し替え', parent=self.bottomButtonLayout, width=70, command=self.ikfkSwitch)
+        pm.text(' ', width=20, parent=self.bottomButtonLayout)
+        pm.button('fkikR', label=u'右手->IK', parent=self.bottomButtonLayout, width=50, command=partial(self.fkikSwitch, 'Right'))
+        pm.text(' ', width=5, parent=self.bottomButtonLayout)
+        pm.button('fkikL', label=u'左手->IK', parent=self.bottomButtonLayout, width=50, command=partial(self.fkikSwitch, 'Left'))
+        pm.text(' ', width=5, parent=self.bottomButtonLayout)
+        pm.button('ikfkR', label=u'右手->FK', parent=self.bottomButtonLayout, width=50, command=partial(self.ikfkSwitch, 'Right'))
+        pm.text(' ', width=5, parent=self.bottomButtonLayout)
+        pm.button('ikfkL', label=u'左手->FK', parent=self.bottomButtonLayout, width=50, command=partial(self.ikfkSwitch, 'Left'))
 
 
         pm.showWindow() # calls the window out
@@ -615,22 +624,43 @@ class PrismPicker():
             pm.select(self.pickerData, deselect=True)
         pass
 
-    def fkikSwitch(self, dir):#fk switch to IK
-        pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
-        return
-        pm.xform('pv_Elbow_%s' %dir, t=pm.xform('fk_ForeArm_%s' %dir, ws=True, q=True, t=True), ws=True)#moving the polevector to elbow
-        pm.xform('ik_Hand_%s' %dir, t=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, t=True), ro=pm.xform('fk_Hand_%s' %dir, ws=True, q=True, ro=True), ws=True)#moving the hand IK to wrist
+    def fkikSwitch(self, *dir):#fk switch to IK
+        #pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
+
+        default = [float(i) for i in str(pm.getAttr('ik_Hand_%s.default' %dir[0])).split(' ')]
+        fkTrans = [pm.xform('fk_Hand_%s' %dir[0], ws=True, q=True, t=True)[0] - default[0], pm.xform('fk_Hand_%s' %dir[0], ws=True, q=True, t=True)[1] - default[1], pm.xform('fk_Hand_%s' %dir[0], ws=True, q=True, t=True)[2] - default[2]]
+
+        pm.xform('pv_Elbow_%s' %dir[0], t=pm.xform('fk_ForeArm_%s' %dir[0], ws=True, q=True, t=True), ws=True)#moving the polevector to elbow
+        pm.xform('ik_Hand_%s' %dir[0], t=fkTrans, ro=pm.xform('fk_Hand_%s' %dir[0], q=True, ro=True))#moving the hand IK to wrist
+
+        pm.setAttr('Character_%sArm_parentConstraint1.BoneIK_%sArmW1' %(dir[0], dir[0]), 1)#keying the constraints on the chara bone to FK
+        pm.setAttr('Character_%sArm_parentConstraint1.BoneFK_%sArmW0' %(dir[0], dir[0]), 0)
+        pm.setAttr('Character_%sForeArm_parentConstraint1.BoneIK_%sForeArmW1' %(dir[0], dir[0]), 1)
+        pm.setAttr('Character_%sForeArm_parentConstraint1.BoneFK_%sForeArmW0' %(dir[0], dir[0]), 0)
+        pm.setAttr('Character_%sHand_parentConstraint1.BoneIK_%sHandW1' %(dir[0], dir[0]), 1)
+        pm.setAttr('Character_%sHand_parentConstraint1.BoneFK_%sHandW0' %(dir[0], dir[0]), 0)
 
     # IKFK switch needs more work. Leave it aside for now to work on other stuff
-    def ikfkSwitch(self, dir):
-        pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
-        return
-        pm.xform('fk_UpperArm_%s' %dir, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
+    def ikfkSwitch(self, *dir):
+        #pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
+        #resetting all extra gimbals to 0
+        pm.setAttr('fk_UpperArm_%s_gimbal.rotate' %dir[0], (0, 0, 0))
+        pm.setAttr('fk_ForeArm_%s_gimbal.rotate' %dir[0], (0, 0, 0))
+        pm.setAttr('fk_Hand_%s_gimbal.rotate' %dir[0], (0, 0, 0))
+
+        pm.xform('fk_UpperArm_%s' %dir[0], rotation=pm.xform('Character_%sArm' %dir[0], rotation=True, q=True, ws=True),
                  ws=True) #setting the rotate for upper arm
-        pm.xform('fk_ForeArm_%s' %dir, rotation=pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True),
+        pm.xform('fk_ForeArm_%s' %dir[0], rotation=pm.xform('Character_%sForeArm' %dir[0], rotation=True, q=True, ws=True),
                  ws=True)
-        pm.xform('fk_Hand_%s' %dir, rotation=pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True),
+        pm.xform('fk_Hand_%s' %dir[0], rotation=pm.xform('Character_%sHand' % dir[0], rotation=True, q=True, ws=True),
                  ws=True)
+
+        pm.setAttr('Character_%sArm_parentConstraint1.BoneFK_%sArmW0' %(dir[0], dir[0]), 1)#keying the constraints on the chara bone to IK
+        pm.setAttr('Character_%sArm_parentConstraint1.BoneIK_%sArmW1' %(dir[0], dir[0]), 0)
+        pm.setAttr('Character_%sForeArm_parentConstraint1.BoneFK_%sForeArmW0' %(dir[0], dir[0]), 1)
+        pm.setAttr('Character_%sForeArm_parentConstraint1.BoneIK_%sForeArmW1' %(dir[0], dir[0]), 0)
+        pm.setAttr('Character_%sHand_parentConstraint1.BoneFK_%sHandW0' %(dir[0], dir[0]), 1)
+        pm.setAttr('Character_%sHand_parentConstraint1.BoneIK_%sHandW1' %(dir[0], dir[0]), 0)
         #pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True)
         #pm.xform('Character_%sForeArm' % dir, rotation=True, q=True, ws=True)
         #pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True)
