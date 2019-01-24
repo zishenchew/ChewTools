@@ -615,13 +615,27 @@ class PrismPicker():
             pm.select(target.split(','), deselect=True)
 
     def selectAll(self, mayaFalse):
+        for i in self.pickerData:
+            print i
         if pm.getModifiers() == 0: # no modifiers
             pm.select(clear=True)
-            pm.select(self.pickerData)
+            for i in self.pickerData:
+                try:
+                    pm.select(i, add=True)
+                except:
+                    pm.select(i.split(','), add=True)
         elif pm.getModifiers() == 1: # shift is held down
-            pm.select(self.pickerData, add=True)
+            for i in self.pickerData:
+                try:
+                    pm.select(i, add=True)
+                except:
+                    pm.select(i.split(','), add=True)
         elif pm.getModifiers() == 4: #ctrl is held down
-            pm.select(self.pickerData, deselect=True)
+            for i in self.pickerData:
+                try:
+                    pm.select(i, deselect=True)
+                except:
+                    pm.select(i.split(','), deselect=True)
         pass
 
     def fkikSwitch(self, *dir):#fk switch to IK
