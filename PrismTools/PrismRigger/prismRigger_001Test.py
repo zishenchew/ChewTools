@@ -44,6 +44,7 @@ class PrismRigger():
             if len(i.split(' ')) > 1:
                 self.jointController[i.split(' ')[0]] = i.split(' ')[1:]
                 self.jointController[i.split(' ')[0]][-1] = self.jointController[i.split(' ')[0]][-1].rstrip('\r\n')
+        self.uiWindow()
 
     def uiWindow(self):
         # checking for duplicate windows
@@ -53,20 +54,30 @@ class PrismRigger():
             pm.windowPref(windowID, remove=True)
 
         # creating window
-        pm.window(windowID, title=u'Prism リガー', widthHeight=(600, 800))
+        pm.window(windowID, title=u'ORENDA リガー', widthHeight=(300, 100))
 
         # menu bar
         menuBar = pm.menuBarLayout()
         helpMenu = pm.menu(label=u'Help')
         manualMenu = pm.menuItem(label=u'仕様書', parent=helpMenu, subMenu=True)#help
 
-
+        # button layout
+        self.masterColumn = pm.columnLayout('masterColumn', width=400)
+        self.riggerButtons = pm.rowLayout(parent=self.masterColumn, nc=10)
+        # buttons
+        pm.text(' ', width=25)
+        pm.button('importSkel', label=u'Import joints', command=self.importSkeleton, parent=self.riggerButtons)
+        pm.button('createControls', label=u'Create controllers', command=self.createControls, parent=self.riggerButtons)
+        pm.button('createRig', label=u'Create rig', command=self.createRig, parent=self.riggerButtons)
 
         pm.showWindow()
 
 
-    def importSkeleton(self):
-        pm.importFile('D:\ChewTools\PrismTools\PrismRigger\Joint.ma')
+    def importSkeleton(self, *mayafalse):
+        try:
+            pm.importFile(r'D:\ChewTools\PrismTools\PrismRigger\Joint.ma') # if working from office
+        except:
+            pm.importFile(r'D:\3 - Code repositories\ChewTools\PrismTools\PrismRigger\Joint.ma') # if working from home
         pass
     def supBoneCreate(self):
         pass
@@ -94,7 +105,7 @@ class PrismRigger():
 
 
 
-    def createControls(self):
+    def createControls(self, *mayafalse):
         for i in self.jointController:
             #create appropriate controller shape at appropriate location, based on data from the list
             if self.jointController[i][0] == 'fk':
@@ -142,7 +153,7 @@ class PrismRigger():
                          scale=(5,5,5))#translate controller to appropriate position, scaling to 5
 
 
-    def createRig(self):
+    def createRig(self, mayafalse):
         #constrain joints to controllers
         for i in self.jointController:
             pm.parentConstraint(self.jointController[i][2], 'BoneFK' + i.lstrip('Character'), mo=True)
@@ -428,7 +439,7 @@ class PrismPicker():
         menuLoad = pm.menuItem(label=u'読み込む', parent=menuPicker, subMenu=False, command=self.importFromFile)
 
         # edit
-        menuEdit = menuPicker = pm.menu(label=u'編集', parent=menuBar)
+        menuEdit = pm.menu(label=u'編集', parent=menuBar)
 
         self.menuEditButton = pm.menuItem(label=u'Synopticを編集', parent=menuEdit, subMenu=False, command=self.editModeSwitch)
         pm.menuItem(divider=True, parent=menuEdit, subMenu=False)
