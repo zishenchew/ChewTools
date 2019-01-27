@@ -122,7 +122,7 @@ class PrismRigger():
                     pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
                              ro=pm.xform(i, ws=True, q=True, ro=True),
                              ws=True,
-                             scale=(5,5,5)) #translate controller to appropriate position, scaling to 5
+                             scale=(2,2,2)) #translate controller to appropriate position, scaling to 5
                     #pm.makeIdentity(contr, apply=True, translate=True, scale=True)
                     pm.parent(contr, world=True, absolute=True)
                     pm.delete(grp)
@@ -135,7 +135,7 @@ class PrismRigger():
                 elif 'Foot' in self.jointController[i][3]:
                     pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
                              ws=True,
-                             scale=(10,10,10)) #translate controller to appropriate position, scaling to 5
+                             scale=(4,4,4)) #translate controller to appropriate position, scaling to 5
                     #pm.setAttr(contr.ty, 0.5)
                     #pm.makeIdentity(contr, apply=True, translate=True, scale=True)
                     pm.parent(contr, world=True, absolute=True)
@@ -150,7 +150,7 @@ class PrismRigger():
                 pm.xform(contr, t=pm.xform(i, ws=True, q=True, t=True),
                          ro=pm.xform(i, ws=True, q=True, ro=True),
                          ws=True,
-                         scale=(5,5,5))#translate controller to appropriate position, scaling to 5
+                         scale=(2,2,2))#translate controller to appropriate position, scaling to 5
 
 
     def createRig(self, mayafalse):
