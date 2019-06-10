@@ -24,6 +24,14 @@ For now, just write the 1st and 2nd tool.
 
 Attached is also a second class for the prismPicker
 
+
+
+Notes:
+    prism picker data format is as follows
+    <name> <width> <height> <x-position in percentage> <y-position in percentage> <colour>
+    ピッカーデータフォーマットは下記となります
+    <名前> <X　軸　長さ> <Y軸の高さ> <X　軸　の位置、％で> <Y　軸　の位置、　％で> <色>
+
 ###########################################################################################################
 '''
 
@@ -86,9 +94,14 @@ class PrismRigger():
         contr = pm.circle(nr=(1,0,0), r=float(self.jointController[contrName][1]), name=self.jointController[contrName][2])[0]
         grp = pm.group(contr, name=str(self.jointController[contrName][2] + '_grp'))
         #pm.rename(contr, self.jointController[contrName][2])  # renaming control
-        pm.xform(grp, t=pm.xform(contrName, ws=True, q=True, t=True),
-                 ro=pm.xform(contrName, ws=True, q=True, ro=True),
-                 scale=(5, 5, 5))  # translate controller to appropriate position, scaling to 5
+        if 'Hand' in str(contrName):
+            pm.xform(grp, t=pm.xform(contrName, ws=True, q=True, t=True),
+                     scale=(5, 5, 5))  # translate controller to appropriate position, scaling to 5
+
+        else:
+            pm.xform(grp, t=pm.xform(contrName, ws=True, q=True, t=True),
+                     ro=pm.xform(contrName, ws=True, q=True, ro=True),
+                     scale=(5, 5, 5))  # translate controller to appropriate position, scaling to 5
 
         #creating an extra set of controls for fresh gimbals
         #controllers are only created for arms and legs
@@ -120,7 +133,6 @@ class PrismRigger():
 
                 if 'Hand' in self.jointController[i][3]:
                     pm.xform(grp, t=pm.xform(i, ws=True, q=True, t=True),
-                             ro=pm.xform(i, ws=True, q=True, ro=True),
                              ws=True,
                              scale=(2,2,2)) #translate controller to appropriate position, scaling to 5
                     #pm.makeIdentity(contr, apply=True, translate=True, scale=True)
@@ -217,6 +229,17 @@ class PrismRigger():
             else:
                 pm.parentConstraint(i.replace('Character_', 'BoneFK_'), i, mo=False, w=1)
 
+        # re-doing the constraints for the FK hands.
+        # I am doing this manually because I am lazy to figure out all exact details of how the script works all over again because I'm re-visiting this after almost 5-6 month break.
+        pm.delete('BoneFK_LeftHand_parentConstraint1')
+        pm.parentConstraint('fk_Hand_Left_gimbal', 'BoneFK_LeftHand', mo=True, w=1)
+        pm.delete('BoneFK_RightHand_parentConstraint1')
+        pm.parentConstraint('fk_Hand_Right_gimbal', 'BoneFK_RightHand', mo=True, w=1)
+
+        # doing the constraints for the IK Hands
+        pm.orientConstraint('ik_Hand_Left', 'BoneIK_LeftHand', mo=True, w=1)
+        pm.orientConstraint('ik_Hand_Right', 'BoneIK_RightHand', mo=True, w=1)
+
         #grouping the IK controllers all under an IK controller group
         ikGrp = pm.group(name='ikContr_grp', empty=True)
         pm.parent('pv_Knee_Left',
@@ -270,6 +293,7 @@ class PrismRigger():
         pm.delete('ik_Foot_Right_grp')
         pm.delete('ik_Hand_Left_grp')
         pm.delete('ik_Hand_Right_grp')
+
 
         '''
         get this to work another time
@@ -555,8 +579,16 @@ class PrismPicker():
 
     def drag1(self, *dra1):
         # first function for creating a button
-        self.but1 = dra1 # storing the coordinates for the middle click input
-        print(dra1[-3], dra1[-2])
+        #print(dra1[-3], dra1[-2])
+        #print(dra1)
+        self.dra1 = dra1 # point at which the click starts
+        #convert the absolute pixel coordinates into a % coordinate
+        self.but1 = {}
+        self.but1['x'] = dra1[-3]/4
+        self.but1['y'] = int(dra1[-2]/4.77)
+        #print(self.but1)
+        #self.but1 = dra1 # storing the coordinates for the middle click input
+
         pass
 
     def createButton(self, *dragControl):
@@ -582,19 +614,21 @@ class PrismPicker():
             colour = (0,0,1)
         else:
             return
+        #print(dragControl) #dragControl is the point at which the drag is ended
+        #print(dragControl[-3], dragControl[-2])
         print 'dragDropSuccess'
         # fromLeft height will bet self.but1[0]
         # fromTop height will bet self.but1[1]
         try:
             createBut = pm.iconTextButton('button_' + pm.ls(sl=True)[0], style='textOnly',
                                           bgc=colour,
-                                          width=(dragControl[-3] - int(self.but1[-3])),
-                                          height=(dragControl[-2] - int(self.but1[-2])),
+                                          width=(dragControl[-3] - self.dra1[-3]),
+                                          height=(dragControl[-2] - self.dra1[-2]),
                                           command=partial(self.selectFunc, pm.ls(sl=True)),
                                           parent=self.pickerLayout)
             pm.formLayout(self.pickerLayout, edit=True,
-                          attachPosition=[(createBut, 'left', 0, float(self.but1[-3])/6),
-                                          (createBut, 'top', 0, float(self.but1[-2])/4.74)])
+                          attachPosition=[(createBut, 'left', 0, (self.but1['x'])),
+                                          (createBut, 'top', 0, self.but1['y'])])
 
         except:
             pm.confirmDialog(title='ORENDA  picker', message=u'そのコントローラーも登録しました。。')
@@ -604,11 +638,12 @@ class PrismPicker():
         # the format for the picker raw data should be
         # ControllerName Width Height FromLeft FromTop Colour
         self.charaListDump
-        self.pickerData[str(pm.ls(sl=True)[0])] = [(dragControl[-3] - int(self.but1[-3])), (dragControl[-2] - int(self.but1[-2])), self.but1[-3], self.but1[-2], colour]
+        self.pickerData[str(pm.ls(sl=True)[0])] = [(dragControl[-3] - self.dra1[-3]), (dragControl[-2] - self.dra1[-2]), (dragControl[-3] - (dragControl[-3] - self.dra1[-3])/2)/4, (dragControl[-2] - (dragControl[-2] - self.dra1[-2])/2)/4.77, colour]
+        print('pickerData', self.pickerData)
         # print self.pickerData[pm.ls(sl=True)[0]]
 
-        print('printing self.picketData')
-        print(self.pickerData)
+        #print('printing self.picketData')
+        #print(self.pickerData)
         self.saveToChar(False)
 
         self.loadPicker()
@@ -618,6 +653,8 @@ class PrismPicker():
         pass
 
     def selectFunc(self, target):
+        if isinstance(target, (list)) == True: #creating this bit because the input of data into the dictionary/list of controllers is wonky
+            target = target[0]
         if pm.getModifiers() == 0:
             pm.select(target.split(','))
         elif pm.getModifiers() == 1:
@@ -688,7 +725,7 @@ class PrismPicker():
         pm.setAttr('Character_%sHand_parentConstraint1.BoneIK_%sHandW1' %(dir[0], dir[0]), 0)
         #pm.xform('Character_%sArm' %dir, rotation=True, q=True, ws=True)
         #pm.xform('Character_%sForeArm' % dir, rotation=True, q=True, ws=True)
-        #pm.xform('Character_%sHand' % dir, rotation=True, q=True, ws=True)
+        #pm.xform('Character_%sHand' % dir, rotation=Tqrue, q=True, ws=True)
 
         #try to use vectors to position the pole vector
         pass
@@ -836,4 +873,40 @@ pl16:R_FF1_ROT,
 pl16:R_FF2_ROT,
 pl16:R_FF3_ROT,
 pl16:R_DF_ROT
+12.5
+joint7.translateZ = $len/500 * 12.5;
+joint8.translateZ = $len/500 * 12.5;
+joint9.translateZ = $len/500 * 12.5;
+joint10.translateZ = $len/500 * 12.5;
+joint11.translateZ = $len/500 * 12.5;
+joint12.translateZ = $len/500 * 12.5;
+joint13.translateZ = $len/500 * 12.5;
+joint14.translateZ = $len/500 * 12.5;
+joint15.translateZ = $len/500 * 12.5;
+joint16.translateZ = $len/500 * 12.5;
+joint17.translateZ = $len/500 * 12.5;
+joint18.translateZ = $len/500 * 12.5;
+joint19.translateZ = $len/500 * 12.5;
+joint20.translateZ = $len/500 * 12.5;
+joint21.translateZ = $len/500 * 12.5;
+joint22.translateZ = $len/500 * 12.5;
+joint23.translateZ = $len/500 * 12.5;
+joint24.translateZ = $len/500 * 12.5;
+joint25.translateZ = $len/500 * 12.5;
+joint26.translateZ = $len/500 * 12.5;
+joint27.translateZ = $len/500 * 12.5;
+joint28.translateZ = $len/500 * 12.5;
+joint29.translateZ = $len/500 * 12.5;
+joint30.translateZ = $len/500 * 12.5;
+joint31.translateZ = $len/500 * 12.5;
+joint32.translateZ = $len/500 * 12.5;
+joint33.translateZ = $len/500 * 12.5;
+joint34.translateZ = $len/500 * 12.5;
+joint35.translateZ = $len/500 * 12.5;
+joint36.translateZ = $len/500 * 12.5;
+joint37.translateZ = $len/500 * 12.5;
+joint38.translateZ = $len/500 * 12.5;
+joint39.translateZ = $len/500 * 12.5;
+joint40.translateZ = $len/500 * 12.5;
+joint41.translateZ = $len/500 * 12.5;
 '''
