@@ -177,15 +177,8 @@ class PrismRigger():
         ikLegR = pm.ikHandle(sj='BoneIK_RightUpLeg', ee='BoneIK_RightFoot', solver='ikRPsolver', name='ikHandle_Leg_Right')[0]
         ikFootR = pm.ikHandle(sj='BoneIK_RightFoot', ee='BoneIK_RightToeBase', solver='ikSCsolver', name='ikHandle_Foot_Right')[0]
         ikArmR = pm.ikHandle(sj='BoneIK_RightArm', ee='BoneIK_RightHand', solver='ikRPsolver', name='ikHandle_Arm_Right')[0]
-        '''
-        #this is gonna be redundant soon. Delete later
-        pm.parentConstraint('ik_Foot_Left',ikLegL)
-        pm.parentConstraint('ik_Foot_Left', ikFootL, mo=True)
-        pm.parentConstraint('ik_Hand_Left', ikArmL)
-        pm.parentConstraint('ik_Foot_Right', ikLegR)
-        pm.parentConstraint('ik_Foot_Right', ikFootR, mo=True)
-        pm.parentConstraint('ik_Hand_Right', ikArmR)
-        '''
+
+
         #offset the pole vectors via a vector method later!
         pm.poleVectorConstraint('pv_Knee_Left', ikLegL)
         pm.poleVectorConstraint('pv_Elbow_Left', ikArmL)
@@ -693,7 +686,8 @@ class PrismPicker():
         fkTrans = [pm.xform('fk_Hand_%s' %dir[0], ws=True, q=True, t=True)[0] - default[0], pm.xform('fk_Hand_%s' %dir[0], ws=True, q=True, t=True)[1] - default[1], pm.xform('fk_Hand_%s' %dir[0], ws=True, q=True, t=True)[2] - default[2]]
 
         pm.xform('pv_Elbow_%s' %dir[0], t=pm.xform('fk_ForeArm_%s' %dir[0], ws=True, q=True, t=True), ws=True)#moving the polevector to elbow
-        pm.xform('ik_Hand_%s' %dir[0], t=fkTrans, ro=pm.xform('fk_Hand_%s' %dir[0], q=True, ro=True))#moving the hand IK to wrist
+        # pm.xform('ik_Hand_%s' %dir[0], t=fkTrans, ro=pm.xform('fk_Hand_%s' %dir[0], q=True, ro=True))#moving the hand IK to wrist
+        pm.xform('ik_Hand_%s' %dir[0], t=fkTrans,  )#moving the hand IK to wrist
 
         pm.setAttr('Character_%sArm_parentConstraint1.BoneIK_%sArmW1' %(dir[0], dir[0]), 1)#keying the constraints on the chara bone to FK
         pm.setAttr('Character_%sArm_parentConstraint1.BoneFK_%sArmW0' %(dir[0], dir[0]), 0)
@@ -702,7 +696,22 @@ class PrismPicker():
         pm.setAttr('Character_%sHand_parentConstraint1.BoneIK_%sHandW1' %(dir[0], dir[0]), 1)
         pm.setAttr('Character_%sHand_parentConstraint1.BoneFK_%sHandW0' %(dir[0], dir[0]), 0)
 
-    # IKFK switch needs more work. Leave it aside for now to work on other stuff
+        # IKFK switch needs more work. Leave it aside for now to work on other stuff
+        tempOrientConstr = pm.orientConstraint('fk_Hand_%s' % dir[0], 'ik_Hand_%s' % dir[0], mo=False)
+
+        if pm.keyframe('ik_Hand_%s' % dir[0],
+                       q=True):  # performing a check to see if there are any keys on the fk wrist controller.
+            pm.setKeyframe(
+                'ik_Hand_%s' % dir[0])  # if there is, set a keyframe to preserve the position. Otherwise, it won't be keyed
+            print('there are keyframes on the controller')  # for debugging purposes
+        pm.delete(tempOrientConstr)  # deleting the orient constraint
+
+        # toggle the visibility setting of the bones and the controllers
+        pm.setAttr('BoneIK_%sArm.visibility' %dir[0], 1)
+        pm.setAttr('ik_Hand_%s.visibility' % dir[0], 1)
+        pm.setAttr('fk_UpperArm_%s_grp.visibility' % dir[0], 0)
+        pm.setAttr('BoneFK_%sArm.visibility' % dir[0], 0)
+
     def ikfkSwitch(self, *dir):
         #pm.confirmDialog(message=u'制作中です。', title=u'ORENDA Synoptic')
         #resetting all extra gimbals to 0
@@ -728,7 +737,21 @@ class PrismPicker():
         #pm.xform('Character_%sHand' % dir, rotation=Tqrue, q=True, ws=True)
 
         #try to use vectors to position the pole vector
-        pass
+
+        # orient constraining the fk wrist controller to the IK controller to match orientation
+        tempOrientConstr = pm.orientConstraint('ik_Hand_%s' %dir[0], 'fk_Hand_%s' %dir[0], mo=False)
+
+        if pm.keyframe('fk_Hand_%s' %dir[0], q=True):  # performing a check to see if there are any keys on the fk wrist controller.
+            pm.setKeyframe('fk_Hand_%s' %dir[0])  # if there is, set a keyframe to preserve the position. Otherwise, it won't be keyed
+            print('there are keyframes on the controller')  # for debugging purposes
+        pm.delete(tempOrientConstr)  # deleting the orient constraint
+
+        # toggle the visibility setting of the bones and the controllers
+        pm.setAttr('fk_UpperArm_%s_grp.visibility' % dir[0], 1)
+        pm.setAttr('BoneFK_%sArm.visibility' % dir[0], 1)
+        pm.setAttr('BoneIK_%sArm.visibility' %dir[0], 0)
+        pm.setAttr('ik_Hand_%s.visibility' % dir[0], 0)
+
 
     def importHumanIK(self):
         pass
