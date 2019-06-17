@@ -165,7 +165,40 @@ class PrismRigger():
                          scale=(2,2,2))#translate controller to appropriate position, scaling to 5
 
 
+    def masterSkeleton(self):
+        hips = pm.ls('Character_Hips')[0]
+        hierarchy = {}  # creating a list of joints with the hierarchy data
+        hierarchy[hips] = pm.listRelatives(hips)
+        for i in pm.listRelatives(hips, ad=True):
+            x = pm.listRelatives(i)
+            hierarchy[i] = x
+
+        for i in hierarchy:  # duplicating the joints
+            print(hierarchy[i])
+            pm.duplicate(i, parentOnly=True, name='%s' % (str(i).replace('Character', 'BoneFK')))
+
+        for i in hierarchy:  # re-parenting the joints and stuff
+            print(
+            str(hierarchy[i]).replace('Character', 'BoneFK').replace("')]", '').replace("[nt.Joint(u'", '').replace(
+                "nt.Joint(u'", '').replace("')", '').split(','), str(i).replace('Character', 'BoneFK'))
+            # pm.select(str(hierarchy[i]).replace('Character', 'BoneFK').replace("')]", '').replace("[nt.Joint(u'", '').replace("nt.Joint(u'", '').replace("')", '').split(','), str(i).replace('Character', 'BoneFK'))
+            try:
+                pm.parent(str(hierarchy[i]).replace('Character', 'BoneFK').replace("')]", '').replace("[nt.Joint(u'",
+                                                                                                      '').replace(
+                    "nt.Joint(u'", '').replace("')", '').split(','), str(i).replace('Character', 'BoneFK'))
+            except:
+                print(i + ' fail')
+
+        IKlimbs = ['BoneFK_LeftUpLeg', 'BoneFK_RightUpLeg', 'BoneFK_LeftArm', 'BoneFK_RightArm']
+        for i in IKlimbs:
+            duped = pm.duplicate(i, name=i.replace('BoneFK', 'BoneIK'))
+            for j in pm.listRelatives(i.replace('BoneFK', 'BoneIK'), ad=True):
+                pm.rename(j, str(j).replace('BoneFK', 'BoneIK'))
+
     def createRig(self, mayafalse):
+        pm.makeIdentity('Character_Hips', pm.listRelatives('Character_Hips', ad=True), apply=True, t=False, r=True, s=False, n=False, pn=True)
+        self.masterSkeleton()  # makes it so that only 1 set of joints need to be imported into scene and adjusted
+
         #constrain joints to controllers
         for i in self.jointController:
             pm.parentConstraint(self.jointController[i][2], 'BoneFK' + i.lstrip('Character'), mo=True)
@@ -206,7 +239,7 @@ class PrismRigger():
 
 
 
-
+        
         #constraining all the requisite stuff
         #constraining the character bones to both the IK and FK bones
         print self.jointController
@@ -288,34 +321,8 @@ class PrismRigger():
         pm.delete('ik_Hand_Right_grp')
 
 
-        '''
-        get this to work another time
-        for i in pm.ls('ik*', type='transform', assemblies=True): #deleting empty groups
-            if pm.listRelatives(i, parent=True) == []:
-                children = pm.listRelatives(i)
-                if not pm.listRelatives(i):
-                    try:
-                        pm.delete(i)
-                    except:
-                        print('deleting empty top level transform nodes')
-                        pass
-        '''
-        '''
-        This part is the prepping of the nodes for the softIK
-        
-        pm.shadingNode('addDoubleLinear', asUtility=True, name='node_ArmLength') #left arm length
-        pm.connectAttr('BoneFK_LeftForeArm.tx', 'node_ArmLength.input1')
-        pm.connectAttr('BoneFK_LeftHand.tx', 'node_ArmLength.input2')
 
-        pm.shadingNode('addDoubleLinear', asUtility=True, name='node_LegLength') #left leg length
-        pm.connectAttr('BoneFK_LeftLeg.tx', 'node_LegLength.input1')
-        pm.connectAttr('BoneFK_LeftFoot.tx', 'node_LegLength.input2')
 
-        pm.shadingNode('multiplyDivide', asUtility=True, name='node_ratio')
-        pm.setAttr('node_ratio.operation', 2)
-        pm.connectAttr('node_LegLength.output', 'node_ratio.input1x')
-        pm.connectAttr('node_ArmLength.output', 'node_ratio.input2x')
-        '''
 
     def exportWeights(self): #besides exporting the weights, copy them into memory so that the rigger can make slight bone shifting
         pass
